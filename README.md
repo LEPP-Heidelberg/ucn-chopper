@@ -10,6 +10,8 @@ The host talks to the board over USB-UART with the UART32 register protocol.
 The goal of this repository is to take that working bench code and turn it into a
 **NOMAD driver and controller** for use at the ILL.
 
+The code was branched off from the subversion of the PI on 22.09.2026, so if changes appear there, they will have to merge appropriately.
+
 ## Layout
 
 | Path | Contents |
