@@ -10,7 +10,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 set -e
 
-DEV=/dev/ttyUSB0   # optical link (USE_OPTICAL=1 in the Makefile); was /dev/ttyACM0 for the USB-CDC link
+DEV=${DEV:-/dev/ttyACM0}   # USB-CDC link; use DEV=/dev/ttyUSB0 for the optical link
 PROJ_DIR="$SCRIPT_DIR"
 HBR="$PROJ_DIR/hbr"
 

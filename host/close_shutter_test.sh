@@ -19,7 +19,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 set -e
 HBR="$SCRIPT_DIR/hbr"
-DEV=/dev/ttyUSB0
+DEV=${DEV:-/dev/ttyACM0}   # USB-CDC link; use DEV=/dev/ttyUSB0 for the optical link
 source "$SCRIPT_DIR/overheat_check.sh"
 
 if check_overheat; then
