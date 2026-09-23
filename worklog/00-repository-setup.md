@@ -208,6 +208,38 @@ Kept despite ambiguity:
 the rest the FPGA design. Nothing outside the N219 project and the cores it uses is tracked;
 the other 66 projects in the SVN tree are not in this repository.
 
+## Scope decision: host software only
+
+After the trim, the scope question was settled explicitly:
+
+> The repository should contain what someone needs **on their computer to operate a chopper
+> whose FPGA is already programmed** — the software and the UART code that sends the
+> commands.
+
+So `fpga/` (the VHDL design, Lattice project, simulation, CPU firmware, shared cores) and
+`host/pgm/` (the bitstreams) were **removed**. They are maintained in the Heidelberg SVN
+repository and belong there; the copy here was also older than the design flashed on the
+board, which made it a liability rather than a reference.
+
+What that leaves, and why each part is needed to run the device:
+
+| Kept | Needed for |
+|---|---|
+| `host/` C++ (`C_hbr`, `C_ads131m04`, `C_dual_dac`, `C_dtemp`, `C_simpl_stat`, `hbr.cpp`, `Makefile`) | The `hbr` tool: configuration, waveform tables, moves, ADC, DAC, temperatures |
+| `upstream/` (`uart`, `uart32`, `CLogger`) | The UART32 protocol that actually sends the commands |
+| `upstream/one_xo3d_fpga8_32.*`, `xo3d_fpga8_32.cpp` | FPGA status and refresh (`make fstatus`, `make refresh`), and flashing if bitstreams are supplied |
+| `host/*.sh`, `host/stop` | Day-to-day operation: bring-up, open, close, temperatures, test cycles |
+| `host/tools/` | Generating waveform files, plotting captures, the bench temperature logger |
+| `host/waveforms/` | The PWL profiles the scripts load |
+| `docs/`, `worklog/` | The code map, the NOMAD port plan, and this record |
+
+**Result: 71 tracked files, about 900 KB.** A clone builds with `make hbr` and needs nothing
+from SVN.
+
+FPGA notes kept in the documentation: `docs/CODE_MAP.md` still describes the register map and
+quotes the VHDL where it explains behaviour (for example why triggers get dropped), with the
+warning that those quotes come from an older copy and the C headers are authoritative.
+
 ## Next step
 
 `01-…`: the byte-recording test harness moved into the repository, so that later changes to

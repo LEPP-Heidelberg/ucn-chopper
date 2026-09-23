@@ -10,13 +10,6 @@ host/adc.dat
 host/*.log
 host/plot.png
 
-# --- FPGA tool output (Lattice / IP express) ---
-fpga/**/*.log
-fpga/**/Release/
-fpga/**/impl*/
-fpga/**/*.jed
-fpga/**/*.bit
-
 # but keep the deliberately kept reference material
 !docs/reference/*.png
 !docs/reference/*.log

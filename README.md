@@ -17,9 +17,7 @@ The goal of this repository is to take that working bench code and turn it into 
 | `host/` | The chopper code: `C_hbr`, `C_ads131m04`, `C_dual_dac`, `C_dtemp`, `C_simpl_stat`, the `hbr` command-line tool, `Makefile`, and the bench shell scripts |
 | `host/tools/` | Python helpers: waveform generators, plotting, the bench multimeter logger |
 | `host/waveforms/` | PWL waveform files used by the scripts (`open.dat`, `close.dat`, test shapes); `legacy/` holds older ones |
-| `host/pgm/` | FPGA bitstreams used by `make prog_w` / `prog_g` (v0 prototype images) |
 | `upstream/` | Shared code from the Heidelberg SVN repository that the chopper code is built from: `uart`, `uart32`, `CLogger`, `one_xo3d_fpga8_32`, and the `xo3d_fpga8_32` flash tool |
-| `fpga/` | The FPGA design, for reference: `N219_4x_H-Bridge/` (VHDL, Lattice project, simulation, LM32 CPU firmware) and `shared-SRC/` (the shared cores the design pulls in) |
 | `docs/` | `CODE_MAP.md` (full map of the code and the FPGA register map) and two browsable pages: `index.html` (code map) and `nomad.html` (the NOMAD port plan) |
 | `docs/reference/` | Bench outputs kept as reference (plots, `fstatus`/init logs) and the earlier NOMAD design draft |
 | `worklog/` | One short document per step of the work, saying what changed and why |
@@ -66,14 +64,25 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory docs
 
 ## Origin of the code
 
-`host/`, `upstream/` and `fpga/` come from the Heidelberg SVN repository
+`host/` and `upstream/` come from the Heidelberg SVN repository
 `http://hwstar.physi.uni-heidelberg.de/svn/Lattice_XO2_UART` (revision 1214), where the
 FPGA design and the shared C++ classes are maintained. The device classes and the
 upstream files are unmodified apart from include paths; the scripts, waveform files and
 Python tools are new here. See `worklog/00-repository-setup.md` for exactly what was
 copied and changed.
 
-> **The `fpga/` copy is a snapshot, and it is older than the design flashed on the board.**
-> It still has the H-bridge block at `0x1000` and 1024-entry sequence RAMs, while the board
-> uses `0x2000` and 2048 entries. Take addresses and register layouts from the C headers in
-> `host/`, not from the VHDL. For FPGA work, take a fresh SVN checkout.
+### Scope
+
+This repository holds the **host software only**: what you need on a computer to operate a
+chopper whose FPGA is already programmed. The FPGA design (VHDL, Lattice project, CPU
+firmware) and the bitstreams stay in the Heidelberg SVN repository, where they are
+maintained.
+
+`docs/CODE_MAP.md` documents the FPGA register map as the host code sees it, and quotes the
+VHDL where it explains behaviour. Those quotes came from an SVN copy that is **older than
+the design flashed on the board**, so the C headers in `host/` are authoritative for
+addresses.
+
+Flashing and FPGA status still work from here: `upstream/xo3d_fpga8_32.cpp` builds the
+`xo3d_fpga8_32` tool (`make fstatus`, `make refresh`). The `make prog_w` / `prog_g` targets
+additionally need bitstream files, which are not kept here.
