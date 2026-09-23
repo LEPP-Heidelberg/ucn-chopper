@@ -44,6 +44,9 @@ cd host
 ./close_shutter.sh
 ./read_temps.sh               # Pt100 + DS18B20, read-only
 ./stop                        # release the hold current
+
+tools/uart_probe.sh status    # raw connection test: talks UART32 with stty + shell only,
+                              # no hbr and no C++ involved
 ```
 
 The scripts find `hbr` and the waveform files relative to their own location, so the
