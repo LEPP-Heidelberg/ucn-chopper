@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N219 NOMAD Port</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #dcdcd6;
+  --text: #1d1d1b; --muted: #62625d; --accent: #2f5fd0; --accent-soft: #e5ecfb;
+  --hw: #b8581a; --hw-soft: #fbeee4; --pure: #2f7d4f; --pure-soft: #e3f3e9;
+  --warn: #a4331f; --warn-soft: #fbe7e3; --code-bg: #f0f0ec;
+  --f-uart: #dbe6fb; --f-hbr: #fde2cf; --f-ads: #dcf0e0; --f-dac: #efe0f7; --f-dt: #fdf2c9; --f-cfg: #e6e6e2; --f-mem: #d8eef2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151514; --surface: #1d1d1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #ecece8; --muted: #a3a39c; --accent: #86a8f5; --accent-soft: #23304d;
+    --hw: #f0a16a; --hw-soft: #3d2718; --pure: #7fcf9d; --pure-soft: #1d3326;
+    --warn: #f28b76; --warn-soft: #402019; --code-bg: #262624;
+    --f-uart: #26344f; --f-hbr: #4a3020; --f-ads: #203a27; --f-dac: #3a2847; --f-dt: #413a1c; --f-cfg: #33332f; --f-mem: #1f3a40;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151514; --surface: #1d1d1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #ecece8; --muted: #a3a39c; --accent: #86a8f5; --accent-soft: #23304d;
+  --hw: #f0a16a; --hw-soft: #3d2718; --pure: #7fcf9d; --pure-soft: #1d3326;
+  --warn: #f28b76; --warn-soft: #402019; --code-bg: #262624;
+  --f-uart: #26344f; --f-hbr: #4a3020; --f-ads: #203a27; --f-dac: #3a2847; --f-dt: #413a1c; --f-cfg: #33332f; --f-mem: #1f3a40;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 Inter, system-ui, sans-serif; }
+code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.86em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 1px solid var(--border); padding: 20px 16px; background: var(--surface); }
+nav h1 { font-size: 16px; margin: 0 0 2px; }
+nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 16px; }
+nav a { display: block; color: var(--text); text-decoration: none; padding: 5px 8px; border-radius: 6px; font-size: 13.5px; }
+nav a:hover { background: var(--surface-2); }
+nav a.sub2 { padding-left: 22px; color: var(--muted); font-size: 13px; }
+nav .tools { margin-top: 16px; display: flex; gap: 8px; }
+button { font: inherit; font-size: 13px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+main { padding: 32px 40px 80px; max-width: 1180px; min-width: 0; }
+section { margin-bottom: 56px; }
+h2 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em; }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p.lead { color: var(--muted); margin-top: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin: 14px 0; overflow-x: auto; }
+.mermaid { display: flex; justify-content: center; min-width: 600px; }
+.mermaid svg { max-width: 100%; height: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; background: var(--surface-2); position: sticky; top: 0; }
+td:first-child { white-space: nowrap; }
+td code { white-space: nowrap; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; margin-left: 4px; vertical-align: 1px; }
+.tag.hw { background: var(--hw-soft); color: var(--hw); }
+.tag.pure { background: var(--pure-soft); color: var(--pure); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.bus { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--hw); }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 14px; }
+.callout.info { border-color: var(--accent); background: var(--accent-soft); }
+.search { width: 100%; padding: 9px 12px; font: inherit; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); margin: 6px 0 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 8px 0; }
+/* packet diagram */
+.packet { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.byte { border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; min-width: 96px; background: var(--surface-2); }
+.byte .n { font-weight: 600; font-size: 13px; }
+.byte .d { font-size: 12px; color: var(--muted); }
+.byte.opt { border-style: dashed; }
+.byte.data { background: var(--f-uart); }
+.byte.reply { background: var(--f-ads); }
+/* bitfields */
+.bits { display: grid; gap: 2px; margin: 10px 0 4px; font-size: 12px; }
+.bits .cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; min-width: 0; overflow: hidden; }
+.bits .num { background: none; border: none; color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 11px; padding: 0; }
+/* memory map */
+.memmap { display: grid; grid-template-columns: 110px 1fr; gap: 3px 10px; font-size: 13px; }
+.memmap .addr { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); text-align: right; padding-top: 7px; }
+.memmap .blk { border-radius: 6px; padding: 7px 12px; border: 1px solid var(--border); }
+.memmap .blk b { font-weight: 600; }
+.memmap .blk span { color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* timelines */
+.tl { margin: 10px 0 0; display: grid; gap: 6px; }
+.tl-row { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 10px; font-size: 12.5px; }
+.tl-lbl { color: var(--muted); text-align: right; }
+.tl-track { position: relative; height: 26px; background: var(--surface-2); border-radius: 6px; }
+.tl-bar { position: absolute; top: 3px; bottom: 3px; border-radius: 4px; padding: 0 8px; font-size: 11.5px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-bar.sig { background: var(--f-uart); }
+.tl-bar.busy { background: var(--f-hbr); }
+.tl-bar.held { background: var(--warn-soft); color: var(--warn); }
+.tl-mark { position: absolute; top: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; transform: translateX(-2px); }
+.tl-mark.ok { color: var(--pure); }
+.tl-mark.bad { color: var(--warn); }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  main { padding: 20px 16px 60px; }
+  .two { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h1>N219 → NOMAD</h1>
+  <div class="sub">Driver &amp; controller port plan<br>based on nomad-modules · 2026-09-22</div>
+  <a href="index.html">← Code map</a>
+  <a href="#answer">0 · Short answers</a>
+  <a href="#rules">1 · How NOMAD modules are built</a>
+  <a href="#rules-driver" class="sub2">Driver rules</a>
+  <a href="#rules-controller" class="sub2">Controller rules</a>
+  <a href="#rules-gui" class="sub2">GUI &amp; hardware tab</a>
+  <a href="#example">1b · Worked example: sp15000</a>
+  <a href="#arch">2 · Proposed architecture</a>
+  <a href="#comms">3 · Communications layer</a>
+  <a href="#comms-options" class="sub2">Decision: option 3</a>
+  <a href="#comms-cut" class="sub2">Where to interface</a>
+  <a href="#comms-contract" class="sub2">The two-function contract</a>
+  <a href="#comms-trace" class="sub2">Real byte traces</a>
+  <a href="#comms-posix" class="sub2">PosixLink code</a>
+  <a href="#comms-adapter-full" class="sub2">Wiring into uart32 &amp; driver</a>
+  <a href="#comms-gaps" class="sub2">Why not rs232port</a>
+  <a href="#comms-adapter" class="sub2">uart32 adapter</a>
+  <a href="#driver">4 · The driver</a>
+  <a href="#driver-files" class="sub2">Files</a>
+  <a href="#driver-class" class="sub2">Class &amp; commands</a>
+  <a href="#driver-state" class="sub2">Channel state encoding</a>
+  <a href="#driver-move" class="sub2">A move, end to end</a>
+  <a href="#driver-init" class="sub2">INIT / re-apply</a>
+  <a href="#driver-tables" class="sub2">Table management</a>
+  <a href="#props">5 · Settings: where each lives</a>
+  <a href="#props-hw" class="sub2">Hardware tab (driver)</a>
+  <a href="#props-ctrl" class="sub2">Controller</a>
+  <a href="#props-ro" class="sub2">Readback</a>
+  <a href="#gui">6 · GUI files</a>
+  <a href="#draft">7 · Changes vs. existing draft</a>
+  <a href="#open">8 · Open questions</a>
+  <a href="#order">9 · Implementation roadmap</a>
+  <a href="#image" class="sub2">Using the ILL image</a>
+  <div class="tools"><button id="themeBtn">Toggle theme</button></div>
+</nav>
+
+<main>
+
+<section id="answer">
+  <h2>0 · Short answers</h2>
+  <p class="lead">Based on reading <code>driver_testing/nomad-modules</code>: <code>drivers/utilities/rs232port</code>, <code>faulhaber/chopperfaulhaber</code>, <code>ill/fermichopper</code>, <code>ill/choppers_ill</code>, <code>arduino/arduinocoils</code>, <code>controllers/common/{chopper, chopper2, state/stateio, global}</code>, and the GUI XML conventions. NOMAD core (<code>Driver.h</code>, <code>Controller.h</code>) and the Java client are <b>not</b> in this repo, so framework signatures marked <span class="tag warn">confirm</span> are inferred from how modules call them.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">Can the FPGA settings go in a "Hardware" tab?</h3>
+    <p><b>Yes, but on the driver, not on the <code>global</code> controller.</b> In this codebase, the hardware view is built per driver. Each driver ships <code>gui/&lt;type&gt;Plugin.xml</code> with an <code>&lt;image key="HARDWARE_…"/&gt;</code> and a <code>&lt;settings view="…View.xml"/&gt;</code>. That settings panel is where device-level configuration lives: the serial port (<code>RS232PortView.xml</code>), board parameters (<code>ttlView.xml</code>), and so on.</p>
+    <p>The <code>controllers/common/global</code> module is unrelated. It only holds <code>proposal_change</code>, <code>sample_selector</code>, <code>type_of_measure</code>, and <code>AverageProperties</code>, and it has no hardware settings or driver links.</p>
+    <p style="margin-bottom:0">So the FPGA settings become <b><code>SAVE</code> properties on the <code>heidelbergchopper</code> driver</b>, edited in its settings view. A <code>registerRefresher</code> writes each change to the FPGA immediately, and <code>INIT</code> re-sends all of them, because an FPGA refresh wipes every register. Things a user changes during an experiment (open/close, chop) belong on a <b>controller</b>, where they are scannable and scriptable.</p>
+  </div>
+
+  <div class="two">
+    <div class="card" style="margin:0">
+      <b>Communications (decided: option 3).</b> The driver <b>opens the serial port itself</b> through <code>PosixLink</code>, a ~150-line serial class we own (exact-length reads, complete writes, exceptions, 4 Mbit/s, low latency), the way <code>sp15000</code> opens its own port. <code>uart32</code>'s base class <code>uart</code> becomes a thin forwarder to it, so <code>uart32</code>, <code>C_hbr</code>, and the other classes compile unchanged, and the <b>same code runs on the bench</b> (<code>n219ctl</code>) and in NOMAD. NOMAD's <code>rs232port</code> isn't used for data; it doesn't work as it is (§3.6). The port name and speed are the <code>driver::RS232</code> mixin's saved properties <code>port_device_name</code> and <code>speed</code>.
+    </div>
+    <div class="card" style="margin:0">
+      <b>Controllers.</b> Don't write a new open/close controller. The stock <code>stateio::ShutterController</code> (type <code>shutter</code>) drives any driver that implements <code>stateio::StateIOCommon</code>. It supports <b>masks</b>, so two shutter controllers (mask <code>0x3</code> for ch0, <code>0xC</code> for ch1) can share one board driver, and you get GUI, scan, and sequencer support for free. Chop and ADC capture are driver commands. A small custom controller is only worth adding later if chop needs repetition or timing logic.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="rules">
+  <h2>1 · How NOMAD modules are built (observed conventions)</h2>
+
+  <h3 id="rules-driver">Driver rules</h3>
+  <div class="card"><table>
+    <tr><th>Rule</th><th>Evidence in nomad-modules</th></tr>
+    <tr><td>One directory per module under <code>src/drivers/&lt;vendor&gt;/&lt;device&gt;/</code>, declared by <code>Module.xml</code>; subfolders are compiled too</td><td><code>ill/choppers_ill/Module.xml</code> lists drivers in <code>dcu_serial/</code>, <code>dru_tcp/</code>…</td></tr>
+    <tr><td>Namespace = lower-case module name; class <code>XxxDriver</code>; <code>static const std::string TYPE</code> = GUI type string</td><td><code>chopperfaulhaber::ChopperFaulhaberDriver</code>, <code>TYPE = "chopperfaulhaber"</code></td></tr>
+    <tr><td>The public driver inherits a <b>family interface</b> (what controllers see) plus a <b>transport mixin</b></td><td><code>ChopperFaulhaberDriver : chopper::ChopperCommon, driver::RS232</code>; <code>ArduinoCoilsDriver : stateio::StateIOCommon, driver::ModBusTCP</code></td></tr>
+    <tr><td>Constructor: family ctor(name) → <code>driver::RS232::init(name)</code> → <code>registerStates(Real, Perfect, Simulated)</code> → <code>registerFunction(NONE_FUNCTION)</code> → <code>deviceType = LEAF_DEVICE_TYPE_DEVICE_CONTAINER</code> → properties <code>.init(this, SAVE|NOSAVE, "snake_name")</code> → <code>initCommand(...)</code> → spy/observer registration</td><td><code>ChopperFaulhaberDriver.cpp:31-55</code>, <code>ArduinoCoilsDriver.cpp</code></td></tr>
+    <tr><td>State pattern: abstract <code>XxxState : DriverState&lt;XxxDriver&gt;</code> with pure virtuals; <code>RealXxx</code> talks to hardware, <code>PerfectXxx</code> fakes it</td><td>every module listed above</td></tr>
+    <tr><td>All commands go through one <code>execute(const std::string&amp;)</code>; parameters are properties set beforehand</td><td><code>ChopperFaulhaberDriver::execute</code></td></tr>
+    <tr><td>Progress: set <code>commandProgression</code> (or <code>sendProgressEvent</code>) to <code>PROGRESSION_UNKNOWNSTATE_…</code> at start and <code>PROGRESSION_END_DEVICE_CONTAINER</code> when done; long operations finish inside <code>READ</code>/<code>STATUS</code> polls</td><td><code>RealChopperFaulhaberDriver::readStatus</code></td></tr>
+    <tr><td>Periodic polling: <code>registerSpyCommand(cmd, n)</code>, <code>registerObserverCommand(cmd, n)</code> (or <code>…Ms</code>)</td><td>faulhaber: STATUS spy 6 / observer 500; fermichopper: Ms variants</td></tr>
+    <tr><td>Validate or apply on set: <code>registerRefresher(prop, &amp;Cls::refreshX, this)</code>; reject with <code>throw CannotSetValue()</code>; report with <code>sendErrorEvent(CODE, msg)</code></td><td><code>DriveBoxDriver.cpp:65</code>, <code>L340TCDriver.cpp:148</code>, <code>RealI2CDriver.cpp:87</code></td></tr>
+    <tr><td>Fixed per-channel values: plain C arrays of <code>Property</code>, each with its own name</td><td><code>HexapodDriver.h:101</code> <code>Property&lt;float64, SETPOINT&gt; positions[N]</code></td></tr>
+    <tr><td>Serial I/O normally goes through the parent port driver: <code>owner()-&gt;DeviceDriver::write(...)</code> / <code>read(...)</code>. <b>Exception, and our choice:</b> drivers with their own protocol stack open the device themselves, e.g. <code>RealSp15000Driver::init</code> builds <code>"/dev/ttyUSB" + (getChannel()-1)</code></td><td><code>RealDCUSerialDriver.cpp:50-52</code>, <code>RealAliasDriver.cpp</code> (binary <code>write(msg, size)</code>)</td></tr>
+  </table></div>
+
+  <h3 id="rules-controller">Controller rules</h3>
+  <div class="card"><table>
+    <tr><th>Rule</th><th>Evidence</th></tr>
+    <tr><td>Controllers derive from <code>ExperimentController</code> plus capability mixins (<code>controller::Stoppable</code>, <code>controller::Read</code>) and call <code>setFamily(...)</code> and <code>registerFunction(TYPE)</code></td><td><code>ChopperController.cpp:33-60</code></td></tr>
+    <tr><td>They hold drivers only through <b>family interfaces</b>: <code>DriverPtr&lt;ChopperCommon&gt;</code>, <code>DriverPtr&lt;StateIOCommon&gt;</code>, initialised with a role name (<code>"driver"</code>, <code>"write_driver"</code>) that the instrument configuration binds to a concrete driver</td><td><code>ChopperController.h</code>, <code>StateIOController.cpp:36-37</code></td></tr>
+    <tr><td>Wiring happens in <code>postConfiguration()</code>: <code>registerRefresher</code> on setpoints, <code>registerUpdater(driver-&gt;prop, …)</code> to mirror readbacks, <code>registerProgression(driver, …)</code></td><td><code>ChopperController::postConfiguration</code></td></tr>
+    <tr><td>Settable user values are <code>Property&lt;T, SETPOINT&gt;</code> with <code>SAVE | SCAN | SPY</code> flags; limits are enforced in refreshers</td><td><code>ChopperController::refreshWantedSpeedProperty</code></td></tr>
+    <tr><td>"Expert" level parameters get a <b>separate controller type</b> with its own GUI</td><td><code>chopper2::Choppers</code> vs <code>chopper2::ChoppersExpert</code></td></tr>
+  </table></div>
+
+  <h3 id="rules-gui">GUI files &amp; the hardware view</h3>
+  <div class="card"><table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>gui/&lt;type&gt;Plugin.xml</code></td><td><code>&lt;image key="…"/&gt;</code> (icon, e.g. <code>HARDWARE_SERIAL</code>, <code>CHOPPER</code>), <code>&lt;settings view="…"/&gt;</code>; controllers also add <code>&lt;command view="…"/&gt;</code></td></tr>
+    <tr><td><code>gui/&lt;type&gt;View.xml</code></td><td>Settings panel: <code>group</code>, <code>table_composite</code>, <code>label</code>, <code>text</code>, <code>combo valuesAndLabels=…</code>, <code>check checkBoxValues=…</code>, <code>file_text extensions=…</code>, <code>button command=…</code>, <code>newLine</code></td></tr>
+    <tr><td><code>gui/&lt;type&gt;Properties.xml</code></td><td>Property types for the client (<code>int32</code>, <code>float64</code>, <code>string</code>, <code>boolean</code>, <code>max_length</code>)</td></tr>
+    <tr><td><code>gui/&lt;type&gt;.properties</code></td><td>Labels; combo entries are <code>key.xLabel</code> / <code>key.xValue</code> pairs</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="example">
+  <h2>1b · Worked example: <code>sp15000</code> driver + <code>laser_interferometer</code> controller</h2>
+  <p class="lead">The closest existing pair to what we are building: a device with <b>its own protocol stack</b> that <b>opens its own serial port</b> (our option 3), a Real and a Perfect backend, and a controller on top that adds the science. Driver: <code>src/drivers/sios/sp15000/</code> (a SIOS laser interferometer). Controller: <code>src/controllers/npp/qbounce/LaserInterferometerController.*</code>.</p>
+
+  <div class="card"><pre class="mermaid">
+flowchart TB
+  GUI["NOMAD client · sequencer · scans"]
+  subgraph C["Controller · qbounce::LaserInterferometerController (810 lines)"]
+    CP["Properties: nbSamples, amplitude, xFit …<br/>Commands: start / stop / pause / read<br/>+ custom: measure_length, signal_quality"]
+    CS["Science: FFT, sine fit, plots"]
+    DP["DriverPtr&lt;sios::Sp15000Driver&gt; m_driver<br/>init(this, role 'driver')"]
+  end
+  subgraph D["Driver · sios::Sp15000Driver (1132 lines incl. GUI)"]
+    DD["Public driver: properties, commands,<br/>execute() dispatch, m_state enum"]
+    ST["Sp15000State (abstract): init/start/stop/read/<br/>readStatus/readBlock/readLength/readQuality"]
+    RE["RealSp15000Driver<br/>opens /dev/ttyUSB…, calls Ifm* SDK"]
+    PE["PerfectSp15000Driver<br/>sine wave + random numbers"]
+  end
+  HW["SIOS interferometer"]
+  GUI --> CP --> DP --> DD --> ST
+  CP --> CS
+  ST --> RE & PE
+  RE --> HW
+  </pre></div>
+
+  <h3>File map</h3>
+  <div class="card"><table>
+    <tr><th>File</th><th>Lines</th><th>What it holds</th><th>Our equivalent</th></tr>
+    <tr><td><code>Module.xml</code></td><td>3</td><td>Module name, driver class, <code>&lt;link lib="siosifm"/&gt;</code> for the vendor library</td><td>Same, no <code>link lib</code> (our "SDK" is the ported <code>n219/</code> sources)</td></tr>
+    <tr><td><code>Sp15000Driver.h/.cpp</code></td><td>107 + 156</td><td>The public driver: properties, command names, constructor wiring, <code>execute()</code></td><td><code>HeidelbergChopperDriver.*</code></td></tr>
+    <tr><td><code>Sp15000State.h</code></td><td>61</td><td>Abstract backend interface (8 pure virtuals)</td><td><code>HeidelbergChopperState.h</code></td></tr>
+    <tr><td><code>RealSp15000Driver.h/.cpp</code></td><td>69 + 284</td><td>Hardware backend: opens the port, calls the vendor SDK, maps status bits</td><td><code>RealHeidelbergChopperDriver.*</code> → <code>N219Board</code></td></tr>
+    <tr><td><code>PerfectSp15000Driver.h/.cpp</code></td><td>70 + 242</td><td>Simulated backend: same interface, fabricated data</td><td><code>PerfectHeidelbergChopperDriver.*</code></td></tr>
+    <tr><td><code>Sp15000Def.h</code></td><td>43</td><td>Constants: ON/OFF and the driver's own status bit flags</td><td><code>HeidelbergChopperDef.h</code> (register addresses come from <code>n219/C_hbr.h</code>)</td></tr>
+    <tr><td><code>gui/*</code> ×4</td><td>97</td><td>Plugin (icon + settings view), View (panel), Properties (types), .properties (labels)</td><td>Same four files</td></tr>
+  </table></div>
+
+  <h3>1 · The public driver: what NOMAD sees</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">class Sp15000Driver : public driver::RS232 {          // transport mixin only — no family interface (see note below)
+    friend class RealSp15000Driver;                   // backends reach into the driver's properties
+    friend class PerfectSp15000Driver;
+public:
+    static const std::string TYPE;                    // "sp15000" — the GUI type string
+
+    Property&lt;int32&gt;   active, serialNb, nbChannels, nbSamples;   // one value each
+    Property&lt;float64&gt; samplingFreq;
+    DynamicProperty&lt;int32&gt;          channelStatus, A1, O1, A2, O2;   // one value PER CHANNEL, resized at runtime
+    DynamicProperty&lt;float64&gt;        lengthValue, lengthError;
+    DynamicArrayProperty&lt;float64&gt;   xData, yData;                     // a whole array per channel (the trace)
+
+    static const inline std::string MEASURE_LENGTH_COMMAND = "measure_length";   // custom commands are just strings
+    static const inline std::string SIGNAL_QUALITY_COMMAND = "signal_quality";
+
+    virtual void execute(const std::string&amp; aCommand);
+private:
+    void refreshNbChannelsProperty(int32 v);
+    enum class State { NONE, BLOCK_READ, LENGTH_READ, QUALITY_READ };   // which long operation is in flight
+    State m_state;
+};</pre></div>
+  <p><b>Constructor = the wiring list</b>, in this order:</p>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">Sp15000Driver::Sp15000Driver(const std::string&amp; name) {
+    m_state = State::NONE;
+    driver::RS232::init(name);                       // gives speed / nbbits / parity / port_device_name properties
+    registerStates(new RealSp15000Driver(this),      // [0] hardware   — selected by NOMAD's run mode
+                   new PerfectSp15000Driver(this),   // [1] simulated
+                   new PerfectSp15000Driver(this));  // [2] (same stand-in reused)
+    initCommand(driver::START_COMMAND);              // declare every command this driver accepts
+    initCommand(driver::PAUSE_COMMAND);  initCommand(driver::STOP_COMMAND);
+    initCommand(driver::READ_COMMAND);   initCommand(driver::STATUS_COMMAND);
+    initCommand(MEASURE_LENGTH_COMMAND); initCommand(SIGNAL_QUALITY_COMMAND);
+    registerFunction(NONE_FUNCTION);
+    deviceType = LEAF_DEVICE_TYPE_DEVICE_CONTAINER;
+
+    active.init(this, NOSAVE, "active");             // NOSAVE = live value, not stored in the configuration
+    nbChannels.init(this, SAVE, "nb_channels");      // SAVE   = persisted between sessions
+    nbSamples.init(this, SAVE, "nb_samples");
+    samplingFreq.init(this, SAVE, "sampling_freq");
+    channelStatus.init(this, NOSAVE, "channel_status");
+    xData.init(this, NOSAVE, "x_data");  yData.init(this, NOSAVE, "y_data");   // …etc
+
+    registerRefresher(nbChannels, &amp;Sp15000Driver::refreshNbChannelsProperty, this);  // one setter reshapes 8 properties
+
+    registerSpyCommand(driver::READ_COMMAND, 2);      // NOMAD re-issues READ/STATUS on its own…
+    registerSpyCommand(driver::STATUS_COMMAND, 2);
+    registerObserverCommand(driver::READ_COMMAND, 200);
+    registerObserverCommand(driver::STATUS_COMMAND, 200);
+}
+
+void Sp15000Driver::refreshNbChannelsProperty(int32 v) {   // setting nb_channels resizes every per-channel property
+    channelStatus.resize(v);  A1.resize(v); O1.resize(v); A2.resize(v); O2.resize(v);
+    lengthValue.resize(v); lengthError.resize(v); xData.resize(v); yData.resize(v);
+}</pre></div>
+
+  <h3>2 · <code>execute()</code>: one door for every command</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">void Sp15000Driver::execute(const std::string&amp; aCommand) {
+    if (aCommand != STOP &amp;&amp; aCommand != STATUS &amp;&amp; aCommand != READ)
+        sendProgressEvent(PROGRESSION_UNKNOWNSTATE_DEVICE_CONTAINER);       // "something is running"
+
+    Sp15000State* currentState = dynamic_cast&lt;Sp15000State*&gt;(getCurrentState());   // Real or Perfect
+
+    if      (aCommand == driver::INIT_COMMAND)   { m_state = State::NONE;         currentState-&gt;init(); }
+    else if (aCommand == driver::START_COMMAND)  { startActivated = true;
+                                                   m_state = State::BLOCK_READ;   currentState-&gt;start(); }
+    else if (aCommand == MEASURE_LENGTH_COMMAND) { startActivated = true;
+                                                   m_state = State::LENGTH_READ;  currentState-&gt;start(); }
+    else if (aCommand == SIGNAL_QUALITY_COMMAND) { startActivated = true;
+                                                   m_state = State::QUALITY_READ; currentState-&gt;start(); }
+    else if (aCommand == driver::READ_COMMAND)   { currentState-&gt;read(); }
+    else if (aCommand == driver::STATUS_COMMAND) { currentState-&gt;readStatus(); }
+    else if (aCommand == driver::STOP_COMMAND)   { startActivated = false;        currentState-&gt;stop(); }
+}</pre></div>
+  <p><b>Note the shape:</b> commands take no arguments. Three different commands all call <code>start()</code>, and <code>m_state</code> records <i>which</i> one, so the backend knows what to do and what to finish later. That is exactly the pattern our <code>START</code> (open/close) needs while a 411 ms move runs.</p>
+
+  <h3>3 · The backend interface and the two implementations</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">class Sp15000State : public DriverState&lt;Sp15000Driver&gt; {     // "DriverState&lt;T&gt;" gives owner() → the driver
+public:
+    virtual void init() = 0;   virtual void start() = 0;  virtual void stop() = 0;
+    virtual void read() = 0;   virtual void readStatus() = 0;
+    virtual void readBlock() = 0;  virtual void readLength() = 0;  virtual void readQuality() = 0;
+};</pre></div>
+  <div class="two">
+    <div class="card" style="margin:0"><b>RealSp15000Driver</b>
+<pre class="mono" style="white-space:pre-wrap">void RealSp15000Driver::init() {
+    IfmInit();                                   // vendor SDK
+    string dev = "/dev/ttyUSB" + to_string(owner()-&gt;getChannel() - 1);
+    handle = IfmOpenCOM(dev.c_str());            // ← opens the port ITSELF (our option 3)
+    owner()-&gt;serialNb.update(IfmDeviceInfo(handle, …));
+    owner()-&gt;nbChannels = IfmChannels(handle);
+}
+
+void RealSp15000Driver::start() {                // configure + kick off, then try once
+    owner()-&gt;commandProgression = PROGRESSION_UNKNOWNSTATE_DEVICE_CONTAINER;
+    … build channelMask / measFlags from nbChannels() …
+    if (owner()-&gt;m_state == State::BLOCK_READ) {
+        IfmSetBlockMode(handle, measFlags, IFM_TRIGGER_OFF, owner()-&gt;samplingFreq());
+        IfmStartBlock(handle, owner()-&gt;nbSamples());
+        readBlock();                             // may already be done
+    } …
+}
+
+void RealSp15000Driver::readBlock() {            // called again by every spy READ
+    if (IfmValueCount(handle) &gt;= owner()-&gt;nbSamples()) {   // ← completion condition
+        … fill xData/yData arrays, sendEvent(channel) …
+        owner()-&gt;m_state = State::NONE;
+        owner()-&gt;commandProgression = PROGRESSION_END_DEVICE_CONTAINER;   // ← "finished"
+    }
+}
+
+void RealSp15000Driver::readStatus() {           // vendor bits → the driver's own bits (Def.h)
+    int32 v = IfmStatus(handle, channel), s = 0;
+    if (v &amp; IFM_STATUS_BEAMBREAK_QUADRANT) s |= MISCOUNT;
+    if (v &amp; IFM_STATUS_LASER_STABLE)       s |= LASER_STABLE;  …
+    owner()-&gt;channelStatus.set(channel, s);
+}</pre></div>
+    <div class="card" style="margin:0"><b>PerfectSp15000Driver</b>
+<pre class="mono" style="white-space:pre-wrap">void PerfectSp15000Driver::init() { }            // nothing to open
+
+void PerfectSp15000Driver::readBlock() {         // same signature, invented data
+    int32   N  = owner()-&gt;nbSamples();
+    float64 Fs = owner()-&gt;samplingFreq();
+    for (channel …) {
+        float64 phase = M_PI / (4. + channel);
+        … allocate xData/yData …
+        for (i &lt; N) {
+            float64 t = i / Fs;
+            xDataPtr[i] = t;
+            yDataPtr[i] = sin(2*M_PI*50.*t + phase);      // a clean 50 Hz sine
+        }
+        owner()-&gt;xData.sendEvent(channel);
+        owner()-&gt;yData.sendEvent(channel);
+    }
+    owner()-&gt;m_state = State::NONE;
+    owner()-&gt;commandProgression = PROGRESSION_END_DEVICE_CONTAINER;
+}
+
+void PerfectSp15000Driver::readQuality() {       // random beam-quality numbers
+    owner()-&gt;A1.set(channel, (int32)(random_between()*100)); …
+}</pre>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:0">Same 8 methods, no hardware. It finishes immediately rather than waiting, so the GUI and sequencer can be developed with nothing attached.</p></div>
+  </div>
+
+  <h3>4 · How a long command finishes: <code>m_state</code> + spy <code>READ</code></h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Controller / GUI
+  participant D as Sp15000Driver
+  participant B as RealSp15000Driver
+  participant H as Device
+  U->>D: execute(START)
+  D->>D: m_state = BLOCK_READ, progress = UNKNOWN
+  D->>B: start()
+  B->>H: IfmSetBlockMode + IfmStartBlock
+  B->>B: readBlock() → not enough samples yet
+  loop NOMAD re-issues READ on its own (registerSpyCommand)
+    D->>B: read() → readBlock()
+    B->>H: IfmValueCount()
+  end
+  H-->>B: count >= nbSamples
+  B->>B: copy arrays, sendEvent per channel
+  B->>D: m_state = NONE, progress = END
+  D-->>U: command complete
+  </pre>
+  <p style="font-size:13.5px;margin-bottom:0">No threads, no sleeping inside <code>execute()</code>. The driver just says "not finished yet" until the condition holds. <b>Our move does the same</b>, with "is the channel still busy?" (register <code>0x2002</code>) in place of "enough samples?".</p></div>
+
+  <h3>5 · The GUI files</h3>
+  <div class="card"><table>
+    <tr><th>File</th><th>Content</th></tr>
+    <tr><td><code>sp15000Plugin.xml</code></td><td><code>&lt;image key="ALIGNMENT_AND_CALIBRATION"/&gt;</code> + <code>&lt;settings view="sp15000View.xml"/&gt;</code> — this is what puts the device in the hardware view with an icon</td></tr>
+    <tr><td><code>sp15000View.xml</code></td><td>One group, "RS232", in a 2-column <code>table_composite</code>: a label for <code>leaf_channel</code> and combos for <code>speed</code>, <code>nbbits</code>, <code>parity</code>, <code>bitstop</code>, <code>flowcontrol</code>. Nothing else is exposed</td></tr>
+    <tr><td><code>sp15000Properties.xml</code></td><td>Types of those six properties for the client</td></tr>
+    <tr><td><code>sp15000.properties</code></td><td>Labels and combo entries as <code>SP15000.speed1Label=9600</code> / <code>SP15000.speed1Value=9600</code> pairs</td></tr>
+  </table>
+  <p style="margin-bottom:0;font-size:13.5px">Our settings view is much bigger (§6), because the FPGA has many more settings, but the mechanism is identical.</p></div>
+
+  <h3>6 · The controller on top</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">// Adding a named command to a controller: a tiny mixin per command
+class MeasureLength : private controller::Command {
+public:
+    MeasureLength(ExperimentController* c) : controller::Command(c, "measure_length", &amp;MeasureLength::measureLength, this) {}
+    void init(ExperimentController* c) { Command::init(c, "measure_length", &amp;MeasureLength::measureLength, this); }
+    virtual void measureLength() = 0;                  // the controller implements this
+};
+
+class LaserInterferometerController : public virtual ExperimentController,
+        public controller::Stoppable, public controller::Pausable, public controller::Read,
+        public SignalQuality, public MeasureLength {
+public:
+    Property&lt;int32&gt; nbSamples, nbChannels;  Property&lt;float64&gt; samplingFreq;    // mirrors of driver values
+    DynamicProperty&lt;float64&gt; amplitude, frequency, phase, sigmaAmplitude …;    // results of the controller's own fit
+    DynamicArrayProperty&lt;float64&gt; xData, yData, xFft, yFft, xFit, yFit;        // plots
+    DriverPtr&lt;sios::Sp15000Driver&gt; m_driver;                                    // ← the link to the driver
+    virtual void postConfiguration();
+protected:
+    virtual void start(); virtual void stop(); virtual void pause(); virtual void resume(); virtual void read();
+    virtual void measureLength(); virtual void signalQuality();
+};
+
+LaserInterferometerController::LaserInterferometerController(const string&amp; name) {
+    ExperimentController::init(name);
+    controller::Stoppable::init(this);  controller::Pausable::init(this);  controller::Read::init(this);
+    MeasureLength::init(this);          SignalQuality::init(this);
+    setFamily(family::BEAM_PARAMETERS, family::CHOPPER);
+    nbSamples.init(this, NOSAVE, "nb_samples");  …
+    m_driver.init(this, "driver");                 // "driver" = the role name the instrument config binds
+    registerFunction(TYPE);
+}
+
+void LaserInterferometerController::postConfiguration() {
+    nbChannels.update(m_driver-&gt;nbChannels());     // copy sizes from the driver…
+    xData.resize(nbCh); … amplitude.resize(nbCh);  // …and size every per-channel property
+    registerUpdater(m_driver-&gt;xData,         &amp;LaserInterferometerController::updateSignalPlot,   this);
+    registerUpdater(m_driver-&gt;A1,            &amp;LaserInterferometerController::updateSignalQuality, this);
+    registerUpdater(m_driver-&gt;lengthValue,   &amp;LaserInterferometerController::updateLength,        this);
+    registerUpdater(m_driver-&gt;channelStatus, &amp;LaserInterferometerController::updateStatusProperty, this);
+}                                                  // ← driver property changes now push into the controller
+
+void LaserInterferometerController::start() {
+    commandProgression = 0;
+    m_driver.execute(driver::START_COMMAND, true); // ask the driver for data (true = wait for it)
+    calculateFft(signal, false);                   // then do the science the driver knows nothing about
+    plotFft(signal);  getParameters(signal);       // FFT, sine fit, fill amplitude/frequency/phase + errors
+}
+
+void LaserInterferometerController::read()          { m_driver.execute(driver::READ_COMMAND, false); }
+void LaserInterferometerController::measureLength() { m_driver.execute(sios::Sp15000Driver::MEASURE_LENGTH_COMMAND, true); }</pre></div>
+  <p><b>The division of labour is the point:</b> the driver knows the device and nothing about physics; the controller knows the experiment and nothing about the serial protocol. The driver publishes raw traces, and the controller turns them into amplitude, frequency and phase with error bars.</p>
+
+  <h3>7 · What we copy, and what we do differently</h3>
+  <div class="card"><table>
+    <tr><th>sp15000 does</th><th>We do</th><th>Why</th></tr>
+    <tr><td>Inherits only <code>driver::RS232</code>, no family interface</td><td>Inherit <code>stateio::StateIOCommon</code> as well</td><td>That's what lets the <b>stock shutter controller</b> drive us. sp15000 has no matching family, so its controller had to use the concrete type <code>DriverPtr&lt;Sp15000Driver&gt;</code> and be written from scratch</td></tr>
+    <tr><td>Opens <code>/dev/ttyUSB&lt;channel-1&gt;</code> in <code>Real::init</code></td><td>Open <code>port_device_name</code> via <code>PosixLink</code></td><td>Same approach (option 3); we take the path from a property instead of the channel number, so <code>ttyACM</code> and <code>ttyUSB</code> both work</td></tr>
+    <tr><td>Vendor SDK (<code>Ifm*</code>, <code>&lt;link lib&gt;</code>)</td><td><code>N219Board</code> + the ported <code>n219/</code> classes compiled into the module</td><td>We own our "SDK", so it is source, not a library</td></tr>
+    <tr><td><code>m_state</code> enum + spy <code>READ</code> to finish long commands</td><td>The same, for the ~411 ms move</td><td>Proven pattern, no threads</td></tr>
+    <tr><td>Vendor status bits → own flags in <code>Def.h</code></td><td><code>H_STAT</code> bits → channel state + fault flags</td><td>Same idea</td></tr>
+    <tr><td>Per-channel values as <code>DynamicProperty</code> sized by <code>nb_channels</code></td><td>Plain arrays <code>[2]</code>, fixed</td><td>Our channel count is fixed at 2 by the FPGA; <code>hexapod</code> shows this simpler style</td></tr>
+    <tr><td>Controller does FFT/fitting of the driver's arrays</td><td>Controller only sequences moves; ADC traces are published for plotting</td><td>Our "science" is in the waveform tables, which are built in the driver from files</td></tr>
+    <tr><td>Custom command mixins (<code>MeasureLength</code>, <code>SignalQuality</code>)</td><td>Only if we add a chop controller later</td><td>This is the pattern to copy for named controller commands</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="arch">
+  <h2>2 · Proposed architecture</h2>
+  <p class="lead">One board driver per FPGA. It opens the board's serial port itself (option 3). Two stock shutter controllers on top, one per H-bridge channel, told apart by bit masks.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TB
+  subgraph CTRL["Controllers (user level · command views · scannable)"]
+    SH0["stateio::ShutterController<br/>shutter_ch0<br/>masks 0x3 · open=1 close=2"]
+    SH1["stateio::ShutterController<br/>shutter_ch1<br/>masks 0xC · open=4 close=8"]
+    OPT["optional later:<br/>heidelbergchopper controller<br/>chop repeat / period"]
+  end
+  subgraph DRV["Drivers (hardware tab · settings views)"]
+    HC["heidelbergchopper::HeidelbergChopperDriver<br/>StateIOCommon + driver::RS232 · LEAF<br/>FPGA settings = SAVE properties"]
+  end
+  subgraph BOARD["Inside the driver (ported code)"]
+    BUS["uart32 (+ bus mutex)<br/>on uart forwarder"]
+    LINK["PosixLink<br/>opens port_device_name at speed<br/>exact reads · full writes · LinkError"]
+    CLS["C_hbr · C_ads131m04 · C_dual_dac · C_dtemp"]
+  end
+  SH0 -- "write_driver / read_driver" --> HC
+  SH1 -- "write_driver / read_driver" --> HC
+  OPT -.-> HC
+  HC --> CLS --> BUS
+  BUS -- "WriteBuffer / ReadBuffer" --> LINK
+  LINK -- "/dev/ttyACM0 (USB-CDC) or /dev/ttyUSB0 (optical)<br/>4 Mbit/s" --> FPGA["N219 FPGA<br/>UART32 slave, ID 1"]
+  </pre></div>
+  <div class="callout info">Why one driver for both channels rather than one per channel: both channels share <b>one serial link, one set of chip-wide registers</b> (PWM frequency, decay, TOFF, SLEEP_n live in one <code>HBR_CONF</code>), one ADC pair, and one DAC. One driver owning the port avoids two processes or threads fighting over it, and there is no evidence in this repo of leaf drivers nesting under a leaf. The StateIO <b>mask</b> mechanism was designed for multi-channel I/O boards (<code>arduino_coils</code>, <code>men/m24</code>, <code>ill_A7/*</code>) and gives per-channel controllers on a single driver.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="comms">
+  <h2>3 · Communications layer</h2>
+  <p class="lead"><b>Decision: option 3.</b> The driver opens the serial port itself, through a small serial class we own (<code>PosixLink</code>), the way <code>sios::Sp15000Driver</code> opens <code>/dev/ttyUSB…</code> for its vendor library. NOMAD's <code>rs232port</code> is not used for data. The existing <code>uart32</code> protocol code sits on top unchanged.</p>
+
+  <h3 id="comms-options">3.0 Three ways to provide the serial layer</h3>
+  <div class="card"><table>
+    <tr><th>Option</th><th>What it means</th><th>Pros</th><th>Cons</th><th></th></tr>
+    <tr><td>1 · <code>rs232port</code> as is</td><td>Driver is a leaf under NOMAD's serial-port root and calls <code>owner()-&gt;DeviceDriver::write/read</code></td><td>No serial code of our own</td><td>The version in this repo can't do it: no exact-length read, it flushes after reads, max 115200 baud, no <code>ttyUSB</code> (§3.6). The ILL image's version might differ</td><td></td></tr>
+    <tr><td>2 · patch <code>rs232port</code> or copy it</td><td>Fix the read/write loops, speeds, and naming in the port driver (or in our own <code>n219port</code> root)</td><td>Standard NOMAD structure; the port shows in the hardware tree</td><td>A change to a shared module (needs ILL agreement), or a second driver to maintain</td><td></td></tr>
+    <tr><td><b>3 · the driver opens the port itself</b></td><td>The Real backend constructs <code>PosixLink(port_device_name, speed)</code>; <code>uart32</code> runs on top of it</td><td>Full control of timing and errors; 4 Mbit/s; <code>ttyACM</code> and <code>ttyUSB</code>; <b>the same code on the bench (<code>n219ctl</code>) and in NOMAD</b>; no shared-module change; <code>n219/</code> has no NOMAD dependency</td><td>The port is not a separate device in the hardware tree. The driver must handle reopen/reconnect itself. Worth mentioning to ILL reviewers. Precedent: <code>sp15000</code></td><td><span class="tag pure">chosen</span></td></tr>
+  </table></div>
+  <div class="callout info"><b>How option 3 fits NOMAD's conventions.</b> Like <code>sp15000</code>, the driver still inherits the <code>driver::RS232</code> mixin, which gives it the saved properties <code>port_device_name</code> and <code>speed</code> (plus <code>nbbits</code>, <code>parity</code>, <code>bitstop</code>, <code>flowcontrol</code>) and shows them in its settings view. The Real backend reads those two and opens the port. Nothing goes through <code>owner()-&gt;DeviceDriver::write/read</code>, so the NOMAD-side binary I/O signatures no longer matter.<br>
+  <span class="tag warn">confirm on the ILL image</span> <code>RS232::init</code> calls <code>registerParentFunction("rs232")</code>, so check how <code>sp15000</code> is placed in an instrument configuration and do the same. If our driver has to sit under an <code>RS232Port</code> root, that root's <code>init</code> also opens <code>/dev/ttyACM&lt;leaf-channel−1&gt;</code>. Point it at a different channel number, or at a root that doesn't open anything, so two file descriptors never share the board's port.</div>
+
+  <h3 id="comms-cut">3.1 Where the UART code is interfaced</h3>
+  <p>Every hardware access in the project goes through one call chain. The question is which layer to replace. The answer is the <b>lowest one</b>: the <code>uart</code> base class. <code>uart32</code> uses exactly <b>two</b> of its functions, <code>WriteBuffer</code> (5 call sites: 4 in <code>SendBurst</code>, 1 in <code>RecvBurst</code>) and <code>ReadBuffer</code> (2 call sites). Everything else in <code>uart</code> (<code>SendBreak</code>, <code>WriteSingleByte</code>, <code>BytesSent</code>…) is only used by <code>hbr.cpp</code>'s diagnostics or the flash tool.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TB
+  subgraph L4["Device classes · unchanged"]
+    A1["C_hbr · 17 direct uart32 calls<br/>WriteReg / ReadReg, set_sh_mem24, get_sh_mem …"]
+    A2["C_ads131m04 · 25 calls"]
+    A3["C_dual_dac · 11 calls"]
+    A4["C_dtemp · 7 calls"]
+  end
+  subgraph L3["uart32 public API · unchanged"]
+    B1["WriteByte / Word / 3Bytes / DWord · WriteAuto<br/>ReadByte / Word / 3Bytes / DWord"]
+    B2["typed SendBurst / RecvBurst / *24 overloads"]
+  end
+  subgraph L2["uart32 protocol core · unchanged"]
+    C1["SendBurst(psize, ainc, full, addr, void*, wsize)<br/>uart32.cpp:61 · builds header, packs data LE"]
+    C2["RecvBurst(psize, ainc, full, addr, void*, wsize)<br/>uart32.cpp:269 · header out, exact byte count in"]
+  end
+  subgraph L1["uart byte transport · REPLACE THIS"]
+    D1["WriteBuffer(uint8* p, n)<br/>uart32.cpp:182, 192, 209, 216, 350"]
+    D2["ReadBuffer(uint8* p, n)<br/>uart32.cpp:357, 364"]
+  end
+  subgraph L0["Today: uart.cpp · In NOMAD: PosixLink (our code, option 3)"]
+    E1["today: ::write(fd), unchecked<br/>→ PosixLink::write: loop until all sent"]
+    E2["today: ::read(fd), timeouts hidden<br/>→ PosixLink::read: poll until exactly n bytes"]
+  end
+  A1 & A2 & A3 & A4 --> B1 & B2
+  B1 --> C1 & C2
+  B2 --> C1 & C2
+  C1 --> D1
+  C2 --> D1
+  C2 --> D2
+  D1 --> E1
+  D2 --> E2
+  style L1 fill:#fbe7e3,stroke:#a4331f
+  </pre></div>
+  <div class="card"><table>
+    <tr><th>Where to cut</th><th>What you write</th><th>Verdict</th></tr>
+    <tr><td><b>A · replace <code>uart</code></b> (the byte transport)</td><td>One small class with <code>WriteBuffer</code> and <code>ReadBuffer</code> that forward to <code>PosixLink</code> (§3.4). Everything above stays byte-for-byte identical to the code proven on the bench</td><td><span class="tag pure">recommended</span></td></tr>
+    <tr><td>B · replace <code>uart32</code></td><td>About 25 methods, including the header and packing logic in <code>SendBurst</code>/<code>RecvBurst</code>. This rewrites a working protocol for no gain</td><td><span class="tag warn">avoid</span></td></tr>
+    <tr><td>C · replace at <code>C_hbr::WriteReg/ReadReg</code></td><td>Not possible alone: the device classes call <code>uart32</code> directly 60 times (bursts, <code>WriteAuto</code>, 24-bit uploads)</td><td><span class="tag warn">no</span></td></tr>
+  </table></div>
+
+  <h3 id="comms-contract">3.2 The contract the two functions must meet</h3>
+  <div class="card"><table>
+    <tr><th>Function</th><th>How uart32 calls it</th><th>What the replacement must guarantee</th></tr>
+    <tr><td><code>WriteBuffer(p, n)</code></td>
+        <td>Once per packet for short packets (≤ 8 data bytes) and for all 24-bit bursts, header and data together. For larger 8/16/32-bit bursts it is called <b>several times</b>: header first, then the data in chunks of ≤ 1024 bytes. The return value is <b>ignored</b></td>
+        <td>Send exactly <code>n</code> bytes in order, or <b>throw</b>. Consecutive calls must go out back-to-back as one stream (the FPGA doesn't care about gaps, only order)</td></tr>
+    <tr><td><code>ReadBuffer(p, n)</code></td>
+        <td>Only inside <code>RecvBurst</code>, right after the header write. <code>n</code> = words × bytes-per-word. The reply has <b>no terminator, length byte, or checksum</b>, so its size is known only from the request. Replies over 1024 bytes are read with <b>several calls</b> (the ADC buffer is 8 transactions and 16 <code>ReadBuffer</code> calls: 15 × 1024 bytes + 1006). The return value is <b>ignored</b></td>
+        <td>Block until exactly <code>n</code> bytes are in <code>p</code>, or <b>throw</b> on timeout. <b>Never discard input between calls</b>: the second half of a reply may already be waiting in the OS buffer</td></tr>
+    <tr><td>(transaction)</td>
+        <td>A read is <code>WriteBuffer(header)</code> + one or more <code>ReadBuffer</code>. A big write is several <code>WriteBuffer</code> calls</td>
+        <td><b>Nothing else may use the port in between.</b> So the lock <b>cannot</b> live inside <code>WriteBuffer</code>/<code>ReadBuffer</code>. Take it around the whole <code>SendBurst</code>/<code>RecvBurst</code> (two small edits in <code>uart32.cpp</code>), or around each board operation in the driver (needed anyway for busy-check → trigger → confirm)</td></tr>
+    <tr><td>(errors)</td>
+        <td><code>uart32</code> and the device classes ignore every return value. The current <code>uart::ReadBuffer</code> hides timeouts, so a missing board produces garbage</td>
+        <td>The only way to report a failure up through unchanged code is an <b>exception</b>. <code>PosixLink</code> throws <code>LinkError</code>; the Real backend catches it and calls <code>sendErrorEvent</code> (§3.5). Minor: <code>SendBurst</code>/<code>RecvBurst</code> leak their <code>new[]</code> header buffer if an exception passes through, which is worth fixing with <code>std::vector</code> during the port</td></tr>
+    <tr><td>(resync)</td>
+        <td>After a timeout, late reply bytes can still arrive and shift the next read</td>
+        <td><code>PosixLink::write</code> flushes stale input (<code>tcflush(TCIFLUSH)</code>) <b>before</b> each write. In UART32 no reply is ever pending when the host writes, so this is safe and re-aligns the next transaction. It never flushes <b>after</b> a read</td></tr>
+  </table></div>
+
+  <h3 id="comms-trace">3.3 Real bytes at the interface</h3>
+  <p>Recorded by running the <b>unmodified</b> <code>uart32.cpp</code>, <code>C_hbr.cpp</code>, <code>C_dtemp.cpp</code>, and <code>C_dual_dac.cpp</code> on top of a mock <code>uart</code> that prints every <code>WriteBuffer</code>/<code>ReadBuffer</code> call (board ID 1, 32-bit data, 24-bit addresses, as <code>hbr</code> configures it). This is exactly what <code>PosixLink</code> will be asked to send and receive, on the bench and in NOMAD.</p>
+  <div class="card"><table class="mono" style="font-size:12.5px">
+    <tr><th>Call</th><th>Calls at the <code>uart</code> boundary</th></tr>
+    <tr><td>set_pwm_freq(25600)<br><span style="color:var(--muted)">WriteByte(0x2003, 5)</span></td><td>WriteBuffer(7) → <b>01 C0 00 03 20 00 05</b></td></tr>
+    <tr><td>set_preserve_last(2, 1)<br><span style="color:var(--muted)">WriteWord(0x2001, 0x131)</span></td><td>WriteBuffer(8) → 01 C2 00 01 20 00 31 01</td></tr>
+    <tr><td>hbr_rep_pwm()<br><span style="color:var(--muted)">ReadByte(0x2003)</span></td><td>WriteBuffer(6) → 01 C1 00 03 20 00<br>ReadBuffer(1) ← 05</td></tr>
+    <tr><td>get_hbr_conf()<br><span style="color:var(--muted)">Read3Bytes(0x2000)</span></td><td>WriteBuffer(6) → 01 C5 00 00 20 00<br>ReadBuffer(3) ← b0 b1 b2</td></tr>
+    <tr><td>hbr_seq_reset(3)</td><td>WriteBuffer(7) → 01 C0 00 07 20 00 30</td></tr>
+    <tr><td>hbr_upload_seq_table(ch1, ON, 100 entries)</td><td>WriteBuffer(10) → 01 C6 00 0A 20 00 <i>00 00 63 00</i> (range: len−1 = 99, start 0)<br>WriteBuffer(306) → 01 DC 0C 00 38 00 <i>0A FF 01 0A FF 01 …</i> (100 × 3 bytes)</td></tr>
+    <tr><td>read_temper()</td><td>WriteBuffer(6) → 01 C3 00 04 08 00 · ReadBuffer(2)<br>WriteBuffer(6) → 01 C3 00 05 08 00 · ReadBuffer(2)</td></tr>
+    <tr><td>C_dtemp::get_temp(2)</td><td>WriteBuffer(6) → 01 CB 00 90 04 00 · ReadBuffer(4)</td></tr>
+    <tr><td>C_dual_dac::set_dac(1, 2048)</td><td>WriteBuffer(10) → 01 C6 00 81 04 00 00 00 01 00 (I2C reset)<br>WriteBuffer(14) → 01 CE 00 80 04 00 00 08 00 00 C0 20 00 00 (data + command)<br>WriteBuffer(6) → 01 C7 00 81 04 00 · ReadBuffer(4) (status poll, repeats until idle)</td></tr>
+    <tr><td>hbr_seq_start(2, 0, 1) = open ch1</td><td>WriteBuffer(8) → 01 C2 00 07 20 00 <b>82 70</b> (ON1 + store1, ADC mask 0x70)<br>WriteBuffer(6) → 01 C3 00 07 20 00 · ReadBuffer(2) (poll, up to 100×)</td></tr>
+    <tr><td>read_adc_buffer → get_sh_mem(8183 × 16-bit)</td><td>8 transactions, each: WriteBuffer(6) → 01 FB 7F 00 <i>60/64/68…</i> 00 · <b>ReadBuffer(1024) · ReadBuffer(1024)</b><br>last: 01 F3 7E 00 7C 00 · ReadBuffer(1024) · ReadBuffer(1006)</td></tr>
+  </table></div>
+  <div class="card">
+    <b>Decoding one packet:</b> <span class="mono">01 C0 00 03 20 00 05</span> = WriteByte(0x2003, 5)
+    <div class="packet">
+      <div class="byte"><div class="n">01</div><div class="d">board ID (slave mask)</div></div>
+      <div class="byte"><div class="n">C0</div><div class="d">full=1, ainc=1, len-1 low=0,<br>wsize=0 (byte), W</div></div>
+      <div class="byte"><div class="n">00</div><div class="d">len-1 high bits → 1 word</div></div>
+      <div class="byte"><div class="n">03 20 00</div><div class="d">address 0x002003, LSB first</div></div>
+      <div class="byte data"><div class="n">05</div><div class="d">data: code 5 = 25.6 kHz</div></div>
+    </div>
+    <span style="font-size:13px;color:var(--muted)">Read commands differ only in bit 0 of the command byte (<code>C1</code>, <code>C3</code>, <code>C5</code>, <code>C7</code> = read 1/2/3/4-byte words). <code>DC</code> = 24-bit burst with (len−1) low bits = 3; <code>FB</code> = 16-bit read burst of 1024 words.</span>
+  </div>
+  <h3 id="comms-posix">3.4 <code>PosixLink</code>: the serial layer we write</h3>
+  <p>About 150 lines, adapted from today's <code>uart.cpp</code>, with three differences: reads wait for an exact byte count, writes are completed, and every failure throws. It uses only Linux headers, so it compiles unchanged for <code>n219ctl</code> on the bench and inside the NOMAD module.</p>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">// n219/PosixLink.h
+#include &lt;string&gt;  #include &lt;stdexcept&gt;  #include &lt;cstdint&gt;
+
+struct LinkError : std::runtime_error { using std::runtime_error::runtime_error; };
+
+class PosixLink {
+public:
+    PosixLink(const std::string&amp; device, int baud, int timeoutMs = 200);   // throws LinkError
+    ~PosixLink();                                   // close(fd)
+    void write(const uint8_t* p, size_t n);         // all n bytes or throw
+    void read (uint8_t* p, size_t n);               // exactly n bytes or throw on timeout
+    void flushInput();                              // tcflush(TCIFLUSH)
+    void sendBreak();                               // tcsendbreak(fd, 0): UART32 resync
+private:
+    bool waitFor(short events, int msLeft);         // poll()
+    int m_fd = -1;
+    int m_timeoutMs;
+};
+
+// n219/PosixLink.cpp (essentials)
+PosixLink::PosixLink(const std::string&amp; dev, int baud, int timeoutMs) : m_timeoutMs(timeoutMs) {
+    m_fd = ::open(dev.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+    if (m_fd &lt; 0) throw LinkError("open " + dev + ": " + strerror(errno));
+    termios t{};  tcgetattr(m_fd, &amp;t);
+    cfmakeraw(&amp;t);                                  // 8N1 raw: no echo, no CR/LF translation
+    t.c_cflag |= CLOCAL | CREAD;
+    t.c_cflag &amp;= ~(CSTOPB | CRTSCTS | PARENB);
+    t.c_iflag &amp;= ~(IXON | IXOFF | IXANY);
+    cfsetspeed(&amp;t, toSpeed(baud));                  // B4000000, B2000000 … ; throw if unknown (no silent 9600!)
+    if (tcsetattr(m_fd, TCSANOW, &amp;t) != 0) throw LinkError("tcsetattr");
+    serial_struct ss;                               // replaces `setserial … low_latency`
+    if (ioctl(m_fd, TIOCGSERIAL, &amp;ss) == 0) { ss.flags |= ASYNC_LOW_LATENCY; ioctl(m_fd, TIOCSSERIAL, &amp;ss); }
+    tcflush(m_fd, TCIOFLUSH);
+}
+
+void PosixLink::write(const uint8_t* p, size_t n) {
+    flushInput();            // in UART32 no reply is pending when the host writes → drops stale bytes, resyncs
+    while (n) {
+        ssize_t k = ::write(m_fd, p, n);
+        if (k &gt; 0) { p += k; n -= k; continue; }
+        if (k &lt; 0 &amp;&amp; errno != EAGAIN &amp;&amp; errno != EINTR) throw LinkError("write: " + std::string(strerror(errno)));
+        if (!waitFor(POLLOUT, m_timeoutMs)) throw LinkError("write timeout");
+    }
+}
+
+void PosixLink::read(uint8_t* p, size_t n) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(m_timeoutMs);
+    while (n) {
+        int left = (int) std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(deadline - std::chrono::steady_clock::now()).count();
+        if (left &lt;= 0 || !waitFor(POLLIN, left))
+            throw LinkError("read timeout, " + std::to_string(n) + " bytes missing");
+        ssize_t k = ::read(m_fd, p, n);
+        if (k &gt; 0) { p += k; n -= k; }
+        else if (k == 0 || (errno != EAGAIN &amp;&amp; errno != EINTR)) throw LinkError("read failed (device gone?)");
+    }
+    // NO flush here: the next ReadBuffer call of the same reply reads the bytes already waiting
+}</pre></div>
+
+  <h3 id="comms-adapter-full">3.5 Wiring it under <code>uart32</code>, and into the driver</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">// n219/uart.h: our version of uart32's base class. Just a forwarder, no OS code left in it.
+#include "PosixLink.h"
+class uart {
+public:
+    explicit uart(PosixLink* link) : m_link(link) {}
+    virtual ~uart() {}
+    bool WriteBuffer(uint8_t* p, uint32_t n) { m_link-&gt;write(p, n); m_sent += n; return true; }   // uart32.cpp:182,192,209,216,350
+    int  ReadBuffer (uint8_t* p, uint32_t n) { m_link-&gt;read (p, n); m_recv += n; return 0; }      // uart32.cpp:357,364
+    int  ClearReadBuff(int = 0) { m_link-&gt;flushInput(); return 0; }
+    void SendBreak(int)         { m_link-&gt;sendBreak(); }
+    bool WriteSingleByte(uint8_t b) { return WriteBuffer(&amp;b, 1); }
+    int  BytesSent() const { return (int) m_sent; }   int BytesReceived() const { return (int) m_recv; }
+private:
+    PosixLink* m_link;  uint64_t m_sent = 0, m_recv = 0;
+};
+
+// n219/uart32.h: include "uart.h" (ours), and the constructor takes the link instead of a device string:
+//     explicit uart32(PosixLink* link) : uart(link) { slave_mask=-1; smask_wp=0; max_wsize=WSIZE_DWORD; max_asize=MAX_ASIZE_LARGE; }
+// n219/uart32.cpp: add std::lock_guard&lt;std::recursive_mutex&gt; in the two core SendBurst/RecvBurst (lines 61, 269)
+//                   and replace new[]/delete[] with std::vector so a LinkError doesn't leak.
+
+// RealHeidelbergChopperDriver::init()
+void RealHeidelbergChopperDriver::init() {
+    try {
+        m_board.reset();                                                     // closes any previous port (reconnect)
+        m_link.reset(new PosixLink(owner()-&gt;portDeviceName(),                // e.g. "/dev/ttyACM0" or "/dev/ttyUSB0"
+                                   owner()-&gt;speed(),                         // 4000000
+                                   owner()-&gt;ioTimeoutMs()));
+        m_board.reset(new N219Board(m_link.get(), owner()-&gt;boardId()));     // uart32 + C_hbr/C_ads/C_dac/C_dtemp
+        m_board-&gt;readIdentity();  owner()-&gt;applyAllSettings();  owner()-&gt;loadAllTables();
+        owner()-&gt;commandProgression = PROGRESSION_END_DEVICE_CONTAINER;
+    } catch (const LinkError&amp; e) {
+        owner()-&gt;sendErrorEvent(EXECUTION_ERROR, std::string("N219 link: ") + e.what());
+        m_board.reset(); m_link.reset();                                    // next INIT retries cleanly
+    }
+}</pre></div>
+  <p>Every other Real backend method catches <code>LinkError</code> the same way. After an error it drops the link, so the next <code>INIT</code> (or an automatic retry in <code>STATUS</code>) reopens the port. That covers USB unplug/replug and FPGA power cycles.</p>
+  <p><b>Testing without hardware:</b> <code>PosixLink</code> works on any tty, including a pseudo-terminal. A small script can play "FPGA" on the other end of a <code>socat</code> pty pair, or use the recording mock from §3.3 at the <code>uart</code> level. The same trick gives <b>golden traces</b>: identical bytes to the table in §3.3 mean identical behaviour on the FPGA.</p>
+  <p><b>Throughput:</b> 4 Mbit/s with 10 bits per byte is about 400 kB/s. A 100-entry table (316 bytes) takes under 1 ms. The full ADC buffer (16 366 bytes over 8 transactions) takes about 45 ms. A single register access is dominated by USB round-trip latency (typically around 1 ms for USB-serial; not measured here, but <code>read_temps.sh --time</code> measures it on the bench), not by bytes. None of this needs asynchronous handling in <code>execute()</code>. Only the mechanical move (~411 ms) completes through <code>READ</code> polling.</p>
+
+  <h3 id="comms-gaps">3.6 For reference: why <code>rs232port</code> (option 1) doesn't work as it is</h3>
+  <p style="font-size:14px">Kept in case ILL prefers option 2, and so the same checks can be run against the <code>rs232port</code> on the ILL image.</p>
+  <div class="callout"><b>Why <code>rs232port</code>'s binary read breaks this, concretely.</b>
+  <ol style="margin:6px 0 0;padding-left:20px">
+    <li><b>It doesn't wait.</b> The port is opened with <code>O_NDELAY</code> (<code>RealRS232PortDriver.cpp:79</code>) and never switched back to blocking, so <code>VMIN=1/VTIME=1</code> do nothing. The text <code>read(…, terminator)</code> copes by looping with <code>usleep</code> until the terminator arrives. The binary <code>read(uint8*, len)</code> makes a <b>single</b> <code>::read()</code> straight after the request and returns whatever has arrived, usually <b>nothing yet</b> (the reply is about 1 ms of USB latency away). So even a 1-byte register read would typically return stale buffer contents.</li>
+    <li><b>It throws away the rest.</b> It then runs <code>tcflush(TCIFLUSH)</code>. For the ADC buffer, <code>RecvBurst</code> reads the 2048-byte reply with two <code>ReadBuffer(1024)</code> calls, and the flush after the first one discards bytes that belong to the second.</li>
+    <li><b>Writes aren't checked.</b> On a non-blocking fd a large <code>::write</code> can be partial. The return value is only logged, so a 1024-byte chunk could go out truncated.</li>
+  </ol>
+  The fix is a binary read that loops until <code>len</code> bytes have arrived or the timeout expires (with <code>poll()</code> or a short sleep), with no flush afterwards, and a write that loops until everything is sent.</div>
+  <div class="card"><table>
+    <tr><th>UART32 needs</th><th><code>RealRS232PortDriver</code> today</th><th>Status</th></tr>
+    <tr><td>Binary write of header + data</td><td><code>write(const DeviceDriver*, …, const uint8*, int32)</code>. It flushes stale input (<code>tcflush TCIFLUSH</code>) before writing, which helps resync</td><td><span class="tag pure">OK</span></td></tr>
+    <tr><td><b>Exact-length</b> binary read (1 B … ~16 KB for the ADC buffer) with a timeout</td><td>A <b>single non-blocking</b> <code>::read()</code> (fd opened with <code>O_NDELAY</code>) with an unchecked return value, then <code>tcflush(TCIFLUSH)</code> (<code>RealRS232PortDriver.cpp:79, 241-282</code>). It doesn't wait for the reply, and the flush discards any remainder, so UART32 reads fail (see §3.3)</td><td><span class="tag warn">must fix</span></td></tr>
+    <tr><td>4 Mbit/s (the Makefile's <code>UART_BaudRate</code>)</td><td><code>configure()</code> maps 2400…115200 only. <b>Any other speed falls back to 9600</b> without an error</td><td><span class="tag warn">must fix</span></td></tr>
+    <tr><td>Device name <code>/dev/ttyACM0</code> (USB-CDC) or <code>/dev/ttyUSB0</code> (optical link)</td><td><code>/dev/ttyS&lt;n&gt;</code>, or <code>/dev/ttyACM&lt;n&gt;</code> with <code>use_acm_filename=true</code>; n = leaf channel − 1. No <code>ttyUSB</code></td><td><span class="tag hw">ACM ok</span> <span class="tag warn">USB missing</span></td></tr>
+    <tr><td>Header + reply must not interleave with another thread's packet</td><td>No mutex in the port driver. NOMAD runs spy/observer <code>READ</code>/<code>STATUS</code> alongside commands</td><td><span class="tag warn">lock in our driver</span></td></tr>
+    <tr><td>Low-latency mode (hbr runs <code>setserial … low_latency</code>)</td><td>Not set</td><td><span class="tag warn">add ioctl</span> (<code>ASYNC_LOW_LATENCY</code>) or accept extra latency</td></tr>
+    <tr><td>Errors reported, not swallowed</td><td>Throws <code>DeviceDriver::TimeOut</code> on the overall timeout</td><td><span class="tag pure">better than uart.cpp</span>: catch it and map it to <code>sendErrorEvent</code></td></tr>
+  </table></div>
+  <div class="callout">Recommended fix for the read path, in <code>rs232port</code> or a small dedicated port driver: loop <code>::read</code> until <code>aDataLen</code> bytes have arrived or the <code>TimeoutManager</code> expires, and <b>do not flush after a binary read</b>. Add <code>B921600 / B2000000 / B4000000</code> to <code>configure()</code>, and a device-prefix property (<code>ttyS</code> / <code>ttyACM</code> / <code>ttyUSB</code>). These are small changes, but they are shared-module changes, so coordinate with the NOMAD maintainers.</div>
+
+</section>
+
+<!-- ============================================================ -->
+<section id="driver">
+  <h2>4 · The driver</h2>
+
+  <h3 id="driver-files">4.1 Files</h3>
+  <div class="card"><pre class="mono" style="margin:0">src/drivers/ill/heidelbergchopper/
+  Module.xml                        &lt;module name="heidelbergchopper"&gt;
+                                      &lt;driver class="heidelbergchopper::HeidelbergChopperDriver"/&gt;
+                                    &lt;/module&gt;
+  HeidelbergChopperDriver.h/.cpp    public driver: properties, commands, execute(), refreshers
+  HeidelbergChopperState.h          abstract backend interface
+  RealHeidelbergChopperDriver.h/.cpp    talks to the board through N219Board
+  PerfectHeidelbergChopperDriver.h/.cpp simulated board (moves take the table's duration)
+  HeidelbergChopperDef.h            register constants, state bit encoding
+  N219Board.h/.cpp                  thin facade: owns uart32 + C_* objects, bus mutex, busy-aware trigger
+  n219/                             ported as-is (+ fixes from code map §9)
+    PosixLink.h/.cpp  uart.h (forwarder)  uart32.h/.cpp  CLogger.h/.cpp (shim)
+    C_hbr.h/.cpp  C_ads131m04.h/.cpp  C_dual_dac.h/.cpp  dac_mcp47feb.h  C_dtemp.h/.cpp
+  gui/
+    heidelbergchopperPlugin.xml  heidelbergchopperView.xml
+    heidelbergchopperProperties.xml  heidelbergchopper.properties</pre></div>
+  <p style="font-size:13.5px;color:var(--muted)">The NOMAD-facing layers (driver, state, board facade) stay separate from the ported <code>n219/</code> code, so the FPGA project and the driver can share those sources. <code>C_simpl_stat</code> is not needed. <code>one_xo3d_fpga8_32</code> (flash programming) stays out of NOMAD and remains a bench tool.</p>
+
+  <h3 id="driver-class">4.2 Class, commands, and backend interface</h3>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">namespace heidelbergchopper {
+
+class HeidelbergChopperDriver : public stateio::StateIOCommon, public driver::RS232 {
+    friend class RealHeidelbergChopperDriver;
+    friend class PerfectHeidelbergChopperDriver;
+public:
+    static const std::string TYPE;                       // "heidelbergchopper"
+    static const std::string CHOP_COMMAND;               // "chop"            (uses chop_channel)
+    static const std::string APPLY_SETTINGS_COMMAND;     // "apply_settings"  (re-push all SAVE settings)
+    static const std::string LOAD_TABLES_COMMAND;        // "load_tables"     (rebuild + upload waveforms)
+    static const std::string CONFIGURE_ADC_COMMAND;      // "configure_adc"
+    static const std::string CAPTURE_ADC_COMMAND;        // "capture_adc"     (read 0x6000 buffer)
+    static const std::string SAVE_VREF_EEPROM_COMMAND;   // "save_vref_eeprom"
+
+    HeidelbergChopperDriver(const std::string&amp; name);
+    virtual void execute(const std::string&amp; aCommand);
+
+    // --- settings (SAVE, hardware tab) : see §5.1 ---
+    Property&lt;int32&gt;   boardId, ioTimeoutMs, pwmFrequency, decayMode, offTime;
+    Property&lt;bool&gt;    ocpAutoRetry, bridgeEnable;
+    Property&lt;float64&gt; currentLimitV[2];
+    Property&lt;bool&gt;    holdAfterMove[2], shortCoilIdle[2], afbrEnable[2], afbrInvert[2], ocplEnable[2], ocplInvert[2];
+    Property&lt;std::string&gt; openWaveform[2], closeWaveform[2], chopWaveform[2];
+    Property&lt;float64&gt; timeStepMs[2], timeScale[2], powerScale[2];
+    Property&lt;int32&gt;   adcSampleRate, adcInputMux;  Property&lt;bool&gt; adc16Bit, adcGlobalChop;
+    Property&lt;float64&gt; overheatThresholdC;  Property&lt;int32&gt; moveTimeoutMs;
+    Property&lt;int32&gt;   chopChannel;
+    // --- readback (NOSAVE) : see §5.3 ---
+    Property&lt;std::string&gt; channelState[2], lastError, fpgaBuild;
+    Property&lt;int32&gt;   busy[2], faultN, inputLevel[2], limitSwitches, tableEntries[2][3];
+    Property&lt;float64&gt; tableDurationMs[2][3], pt100TempC[2], dtempC[2];
+    Property&lt;bool&gt;    configInSync;
+    DynamicArrayProperty&lt;float64&gt; adcSample, adcVolt0, adcCurr0, adcVolt1, adcCurr1;   // confirm type name
+private:
+    void refreshPwmFrequency(int32 v);   // one refresher per setting → backend apply
+    // …
+    N219Board* m_board = nullptr;        // Real only
+};
+
+class HeidelbergChopperState : public DriverState&lt;HeidelbergChopperDriver&gt; {
+public:
+    using DriverState::DriverState;
+    virtual void init() = 0;          // INIT: apply settings, load tables, reset SMs, read status
+    virtual void start() = 0;         // START: pop getWanted() → move channel(s)
+    virtual void stop() = 0;          // STOP: sm_reset (abort move, outputs Hi-Z)
+    virtual void read() = 0;          // READ: busy, channel state, actualValue, progression
+    virtual void readStatus() = 0;    // STATUS: fault, temps, config drift, overheat interlock
+    virtual void chop() = 0;
+    virtual void applySettings() = 0;
+    virtual void loadTables() = 0;
+    virtual void configureAdc() = 0;
+    virtual void captureAdc() = 0;
+    virtual void apply(const std::string&amp; setting) = 0;  // called from refreshers
+};
+}</pre></div>
+  <div class="card"><pre class="mono" style="margin:0;white-space:pre-wrap">HeidelbergChopperDriver::HeidelbergChopperDriver(const std::string&amp; name) : StateIOCommon(name) {
+    driver::RS232::init(name);            // for port_device_name / speed properties (sp15000 pattern); we open the port ourselves
+    registerStates(new RealHeidelbergChopperDriver(this),
+                   new PerfectHeidelbergChopperDriver(this),
+                   new PerfectHeidelbergChopperDriver(this));
+    registerFunction(NONE_FUNCTION);
+    deviceType = LEAF_DEVICE_TYPE_DEVICE_CONTAINER;
+
+    boardId.init(this, SAVE, "board_id");            boardId = 1;
+    ioTimeoutMs.init(this, SAVE, "io_timeout_ms");   ioTimeoutMs = 200;
+    portDeviceName = "/dev/ttyACM0";  speed = 4000000;          // RS232 mixin defaults
+    pwmFrequency.init(this, SAVE, "pwm_frequency");  pwmFrequency = 25600;
+    currentLimitV[0].init(this, SAVE, "current_limit_v_ch0");
+    currentLimitV[1].init(this, SAVE, "current_limit_v_ch1");
+    // … every property in §5, snake_case names, _ch0/_ch1 suffix per channel
+
+    initCommand(driver::INIT_COMMAND);   initCommand(driver::START_COMMAND);
+    initCommand(driver::STOP_COMMAND);   initCommand(driver::READ_COMMAND);
+    initCommand(driver::STATUS_COMMAND); initCommand(CHOP_COMMAND);
+    initCommand(APPLY_SETTINGS_COMMAND); initCommand(LOAD_TABLES_COMMAND);
+    initCommand(CONFIGURE_ADC_COMMAND);  initCommand(CAPTURE_ADC_COMMAND);
+    initCommand(SAVE_VREF_EEPROM_COMMAND);
+
+    registerRefresher(pwmFrequency, &amp;HeidelbergChopperDriver::refreshPwmFrequency, this);
+    // … one refresher per hardware setting
+
+    registerSpyCommand(driver::READ_COMMAND, 1);           // channel state while idle
+    registerObserverCommand(driver::STATUS_COMMAND, 5);    // fault/temps/drift
+}</pre></div>
+
+  <h3 id="driver-state">4.3 Channel state encoding for the shutter controllers</h3>
+  <p>The board has <b>no position sensor</b> in the register map the C code uses. The only candidates are the four light-switch inputs in <code>H_STAT</code> bits 16..19 (§8). So the driver reports the <b>last completed move</b>, and reports "moving" or "unknown" otherwise. Using 2 bits per channel makes "moving" match no state, so <code>StateIOController</code> keeps polling until the move really finishes:</p>
+  <div class="card">
+    <div class="bits" style="grid-template-columns: repeat(4, 1fr)">
+      <div class="cell num">3..2 · ch1 (mask 0xC)</div><div class="cell num"></div><div class="cell num">1..0 · ch0 (mask 0x3)</div><div class="cell num"></div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-hbr)">01 open · 10 closed · 00 moving / unknown / fault</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-uart)">01 open · 10 closed · 00 moving / unknown / fault</div>
+    </div>
+    <table style="margin-top:10px">
+      <tr><th>Shutter controller</th><th><code>state_wanted_mask</code></th><th><code>state_actual_mask</code></th><th>wanted/actual value "open"</th><th>"close"</th></tr>
+      <tr><td><code>shutter_ch0</code></td><td><code>0x3</code></td><td><code>0x3</code></td><td><code>1</code></td><td><code>2</code></td></tr>
+      <tr><td><code>shutter_ch1</code></td><td><code>0xC</code></td><td><code>0xC</code></td><td><code>4</code></td><td><code>8</code></td></tr>
+    </table>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:0">These are SAVE properties of each controller (<code>StateIOController</code>: <code>actual_state_values</code>, <code>state_wanted_mask</code>, <code>state_actual_mask</code>, <code>timed_out</code>), so they are set once in the instrument configuration. The controller's default <code>timed_out</code> is 60 s, and it retries up to 3 times. <code>START</code> must therefore be idempotent: if the channel is already moving in the requested direction, don't re-trigger.</p>
+  </div>
+
+  <h3 id="driver-move">4.4 A move, end to end (with the dropped-trigger protection built in)</h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as User / sequencer
+  participant C as ShutterController shutter_ch1
+  participant D as HeidelbergChopperDriver
+  participant B as N219Board (bus mutex)
+  participant F as FPGA
+  U->>C: state = open
+  C->>D: setWanted(4, 0xC) then START
+  D->>B: move(ch1, OPEN)
+  B->>F: R 0x2002 (busy1?)
+  alt ch1 busy
+    B-->>D: already moving that way → no-op, else error "busy"
+  end
+  B->>F: W 0x2007 = ON1 (+ store bit, ADC mask)
+  B->>F: R 0x2002 → busy1 = 1 confirms trigger accepted
+  D-->>D: channelState[1] = moving, actualValue bits 3..2 = 00, progression = unknown
+  loop every 80 ms (controller) + spy READ
+    C->>D: READ
+    D->>B: R 0x2002
+    B->>F: busy1?
+  end
+  F-->>B: busy1 = 0
+  D-->>D: channelState[1] = open, actualValue bits 3..2 = 01, progression = END
+  C-->>U: state open (commandStatus idle)
+  </pre></div>
+  <p>If the confirm read in step 7 shows busy = 0 and the sequence status (<code>0x200C</code>) did not change, the trigger was dropped. The driver retries once and then raises <code>sendErrorEvent</code>. It never returns success silently the way <code>hbr --start</code> does. <b>STOP</b> is the only command that uses <code>sm_reset</code>, because that aborts a move with power cut.</p>
+
+  <h3 id="driver-init">4.5 INIT, and re-applying after an FPGA refresh</h3>
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  I["INIT"] --> A["apply chip settings<br/>pwm, decay, toff, ocpm"] --> B["per channel:<br/>inputs, slow decay, hold,<br/>DAC VREF"] --> T["build + upload tables<br/>open / close / chop"] --> R["sm_reset both,<br/>sleep_n = bridge_enable"] --> ADC["configure ADC<br/>(64 k, 16-bit, auto-read)"] --> S["STATUS: read back<br/>HBR_CONF + ranges"]
+  ST["STATUS (observer)"] --> CMP{"HBR_CONF / ranges /<br/>PWM code match<br/>SAVE values?"}
+  CMP -- yes --> OK["config_in_sync = 1"]
+  CMP -- "no (FPGA refreshed<br/>or edited elsewhere)" --> W["config_in_sync = 0,<br/>warning event,<br/>optional auto re-apply"]
+  </pre></div>
+  <p>This replaces <code>initialize_fpga.sh</code>. Because every setting is a SAVE property, NOMAD restores the values at start-up and <code>INIT</code> pushes them to the board. Detecting drift is simple: all four range registers read back as 0 after a refresh.</p>
+
+  <h3 id="driver-tables">4.6 Table management: resident tables instead of reload-per-move</h3>
+  <p>The scripts reload the table before every move. With 2048 entries per channel, the driver can keep <b>open, close, and chop resident</b> and only rewrite a <b>range register</b> (one 4-byte write) when needed:</p>
+  <div class="card"><table>
+    <tr><th>RAM region (per channel)</th><th>Holds</th><th>Range register</th></tr>
+    <tr><td>0 … N<sub>open</sub>−1</td><td>open table</td><td><b>ON</b> range points here (permanent). The AFBR/OCPL rising edge also opens</td></tr>
+    <tr><td>N<sub>open</sub> … +N<sub>close</sub>−1</td><td>close table</td><td><b>OFF</b> range points here (permanent). The falling edge closes</td></tr>
+    <tr><td>after that</td><td>chop table</td><td>For CHOP only: point the ON range at chop, trigger ON, wait until not busy, restore the ON range</td></tr>
+  </table></div>
+  <p style="font-size:13.5px">This keeps <b>open = ON = rising edge</b> and <b>close = OFF = falling edge</b>, matching the current scripts and the external trigger inputs. Tables are rebuilt when a waveform file, its resample parameters, or <code>pwm_frequency</code> change (the time step depends on it). The driver rejects tables with fewer than 2 entries (a 1-entry range is disabled in hardware) and tables that don't fit. <span class="tag warn">caution</span> While chop has re-pointed the ON range, an external rising edge would play chop, so disable the inputs during chop or document it.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="props">
+  <h2>5 · Settings: where each one lives</h2>
+  <p class="lead">Rule of thumb: <b>tuned once per mechanism or board → driver settings (hardware tab)</b>. <b>Changed during experiments → controller</b>. <b>Measured → NOSAVE readback</b>, shown in both places.</p>
+
+  <h3 id="props-hw">5.1 Hardware tab: <code>heidelbergchopper</code> driver settings (SAVE)</h3>
+  <div class="card"><table>
+    <tr><th>Property (NOMAD name)</th><th>Type · widget</th><th>Applies via</th><th>Notes</th></tr>
+    <tr><td colspan="4" style="background:var(--surface-2)"><b>Link</b> (opened by the driver itself through <code>PosixLink</code>; properties come from the <code>driver::RS232</code> mixin)</td></tr>
+    <tr><td><code>board_id</code></td><td>int32 · text</td><td><code>uart32::set_slave_mask</code></td><td>default 1</td></tr>
+    <tr><td><code>port_device_name</code> (RS232 mixin)</td><td>string · text</td><td><code>PosixLink(…)</code> at INIT</td><td><code>/dev/ttyACM0</code> (USB-CDC) or <code>/dev/ttyUSB0</code> (optical)</td></tr>
+    <tr><td><code>speed</code> (RS232 mixin)</td><td>int32 · combo</td><td><code>PosixLink</code> termios</td><td>4000000; unsupported values are rejected, not silently changed</td></tr>
+    <tr><td><code>io_timeout_ms</code></td><td>int32 · text</td><td><code>PosixLink</code> read/write timeout</td><td>default 200</td></tr>
+    <tr><td colspan="4" style="background:var(--surface-2)"><b>H-bridge chip, both channels</b></td></tr>
+    <tr><td><code>pwm_frequency</code></td><td>int32 · combo 4000…64000</td><td><code>set_pwm_freq</code> → W1 <code>0x2003</code></td><td>triggers a table rebuild</td></tr>
+    <tr><td><code>decay_mode</code></td><td>int32 · combo slow / smart / mixed</td><td><code>set_hbr_conf_decay</code></td><td>scripts use 2 (mixed)</td></tr>
+    <tr><td><code>off_time</code></td><td>int32 · combo 7/16/24/32 µs</td><td><code>set_hbr_conf_toff</code></td><td></td></tr>
+    <tr><td><code>ocp_auto_retry</code></td><td>bool · check</td><td><code>set_hbr_conf_ocpm</code></td><td>off = latch until SLEEP_n pulse</td></tr>
+    <tr><td><code>bridge_enable</code></td><td>bool · check</td><td><code>set_hbr_conf_sleep_n</code></td><td>off = all outputs off; also clears a fault</td></tr>
+    <tr><td colspan="4" style="background:var(--surface-2)"><b>Per channel</b> (<code>_ch0</code> / <code>_ch1</code>)</td></tr>
+    <tr><td><code>current_limit_v_chN</code></td><td>float64 · text 0–3.3</td><td><code>C_dual_dac::set_dac_volt</code></td><td>DAC channels are swapped internally. EEPROM write is a separate button</td></tr>
+    <tr><td><code>hold_after_move_chN</code></td><td>bool · check</td><td><code>set_preserve_last</code></td><td>hold power is capped at 25 % by the firmware. The overheat interlock clears it</td></tr>
+    <tr><td><code>short_coil_idle_chN</code></td><td>bool · check</td><td><code>set_hbr_sm_slow_decay</code></td><td></td></tr>
+    <tr><td><code>afbr_enable_chN</code>, <code>afbr_invert_chN</code>, <code>ocpl_enable_chN</code>, <code>ocpl_invert_chN</code></td><td>bool · checks</td><td><code>set_hbr_conf_ena_inv_afbr/ocpl</code></td><td><b>enable only wired inputs</b>: spurious edges cause dropped triggers</td></tr>
+    <tr><td><code>open_waveform_chN</code>, <code>close_waveform_chN</code>, <code>chop_waveform_chN</code></td><td>string · <code>file_text extensions="dat"</code></td><td>read → resample → compress → upload</td><td>PWL <code>.dat</code> files, as today</td></tr>
+    <tr><td><code>time_step_ms_chN</code>, <code>time_scale_chN</code>, <code>power_scale_chN</code></td><td>float64 · text</td><td>resample parameters</td><td>defaults 0 / 1 / 1</td></tr>
+    <tr><td colspan="4" style="background:var(--surface-2)"><b>ADC</b> (applied by <code>configure_adc</code>)</td></tr>
+    <tr><td><code>adc_sample_rate</code></td><td>int32 · combo 250…64000</td><td><code>prepare_all_regs</code> + <code>hw_wr_all_regs</code></td><td>64000 requires 16-bit</td></tr>
+    <tr><td><code>adc_16bit</code>, <code>adc_global_chop</code></td><td>bool · checks</td><td><code>set_16_24b</code>, GC flag</td><td>chop only up to 8 kS/s</td></tr>
+    <tr><td><code>adc_input_mux</code></td><td>int32 · combo normal / short / +test / −test</td><td><code>set_inp_mux</code></td><td>diagnostics only</td></tr>
+    <tr><td colspan="4" style="background:var(--surface-2)"><b>Safety</b></td></tr>
+    <tr><td><code>overheat_threshold_c</code></td><td>float64 · text</td><td>STATUS interlock</td><td>replaces the external-CSV <code>overheat_check.sh</code> with the board's own Pt100 / DS18B20 readings</td></tr>
+    <tr><td><code>move_timeout_ms</code></td><td>int32 · text</td><td>READ</td><td>busy longer than table duration + margin → error</td></tr>
+  </table></div>
+  <div class="card"><b>Hardware-tab buttons</b> (driver commands): <code>init</code>, <code>apply_settings</code>, <code>load_tables</code>, <code>configure_adc</code>, <code>capture_adc</code>, <code>save_vref_eeprom</code>, <code>status</code>. <b>Not exposed:</b> MODE1/MODE2 (the firmware forces them), the raw sequence ranges (the driver manages them), CPU IMEM upload and flash programming (bench tools).</div>
+
+  <h3 id="props-ctrl">5.2 Controller level (what users touch)</h3>
+  <div class="card"><table>
+    <tr><th>Where</th><th>Property / command</th><th>Notes</th></tr>
+    <tr><td><code>shutter_ch0</code>, <code>shutter_ch1</code> (stock <code>shutter</code>)</td><td><code>state</code> setpoint: open / close · <code>stop</code> · <code>read</code></td><td>Scannable and usable in sequences. Uses the shutter's existing command view</td></tr>
+    <tr><td><code>heidelbergchopper</code> driver command</td><td><code>chop</code> with <code>chop_channel</code></td><td>Single triggered motion. A button in the hardware view is enough at first</td></tr>
+    <tr><td>optional <code>heidelbergchopper</code> controller (later)</td><td>chop repeat count / period, capture-and-plot</td><td>Only if §8 Q2 says chop repeats. Follows the <code>ChoppersExpert</code> pattern (<code>ExperimentController</code> + <code>DriverPtr</code>)</td></tr>
+  </table></div>
+
+  <h3 id="props-ro">5.3 Readback (NOSAVE · spy/observer)</h3>
+  <div class="card"><table>
+    <tr><th>Property</th><th>Source</th></tr>
+    <tr><td><code>actual_value</code>, <code>io_status</code> (StateIOCommon)</td><td>§4.3 encoding</td></tr>
+    <tr><td><code>channel_state_chN</code> (string)</td><td>open / closed / moving / unknown / fault / overheat</td></tr>
+    <tr><td><code>busy_chN</code>, <code>fault_n</code>, <code>input_level_chN</code>, <code>limit_switches</code></td><td><code>H_STAT</code> <code>0x2002</code>: b2/b3, b0, b8/b9, b16..19</td></tr>
+    <tr><td><code>pt100_temp_c_chN</code>, <code>dtemp_c_top</code>, <code>dtemp_c_bottom</code>, <code>dtemp_presence</code></td><td><code>read_temper</code>, <code>C_dtemp::get_temp</code>, <code>get_presence_mask</code></td></tr>
+    <tr><td><code>table_entries_chN_{open,close,chop}</code>, <code>table_duration_ms_…</code></td><td>computed at upload</td></tr>
+    <tr><td><code>config_in_sync</code>, <code>last_error</code>, <code>fpga_build</code></td><td>STATUS compare; <code>get_cpu_prog_timestamp</code></td></tr>
+    <tr><td>ADC capture arrays</td><td><code>capture_adc</code> → 0x6000 buffer, scaled as in <code>read_adc_buffer</code></td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="gui">
+  <h2>6 · GUI files for the hardware tab</h2>
+  <div class="two">
+    <div class="card" style="margin:0"><b>gui/heidelbergchopperPlugin.xml</b>
+<pre class="mono" style="white-space:pre-wrap">&lt;controller_plugin_config type="heidelbergchopper"&gt;
+    &lt;image key="CHOPPER"/&gt;
+    &lt;settings view="heidelbergchopperView.xml"/&gt;
+&lt;/controller_plugin_config&gt;</pre>
+      <b>gui/heidelbergchopper.properties</b> (excerpt)
+<pre class="mono" style="white-space:pre-wrap">hc.chipTitle=H-bridge chip (both channels)
+hc.pwm4000Label=4.0 kHz
+hc.pwm4000Value=4000
+hc.pwm25600Label=25.6 kHz
+hc.pwm25600Value=25600
+hc.decaySlowLabel=Slow
+hc.decaySlowValue=0
+hc.decaySmartLabel=Smart tune
+hc.decaySmartValue=1
+hc.decayMixedLabel=Mixed 30%
+hc.decayMixedValue=2
+hc.holdAfterMove=Hold after move</pre>
+    </div>
+    <div class="card" style="margin:0"><b>gui/heidelbergchopperView.xml</b> (excerpt)
+<pre class="mono" style="white-space:pre-wrap">&lt;plugin&gt;
+  &lt;controller type="heidelbergchopper" role="hc1"/&gt;
+  &lt;group title="hc.chipTitle"&gt;
+    &lt;combo role="hc1" property="pwm_frequency" prefix="hc.pwmPrefix"
+      valuesAndLabels="hc.pwm4000,hc.pwm6400,hc.pwm8000,hc.pwm12800,
+                       hc.pwm16000,hc.pwm25600,hc.pwm32000,hc.pwm64000"/&gt;
+    &lt;combo role="hc1" property="decay_mode" prefix="hc.decayPrefix"
+      valuesAndLabels="hc.decaySlow,hc.decaySmart,hc.decayMixed"/&gt;
+    &lt;check role="hc1" property="bridge_enable" checkBoxValues="hc.bridgeEnable"/&gt;
+  &lt;/group&gt;
+  &lt;newLine/&gt;
+  &lt;group title="hc.ch0Title"&gt;
+    &lt;text role="hc1" property="current_limit_v_ch0" prefix="hc.vrefPrefix" suffix="hc.volt"/&gt;
+    &lt;check role="hc1" property="hold_after_move_ch0" checkBoxValues="hc.holdAfterMove"/&gt;
+    &lt;file_text role="hc1" property="open_waveform_ch0"  prefix="hc.openFile"  extensions="dat"/&gt;
+    &lt;file_text role="hc1" property="close_waveform_ch0" prefix="hc.closeFile" extensions="dat"/&gt;
+    &lt;label role="hc1" property="channel_state_ch0" prefix="hc.state"/&gt;
+  &lt;/group&gt;
+  &lt;!-- same group for ch1, then ADC, Safety, Status --&gt;
+  &lt;newLine/&gt;
+  &lt;button role="hc1" command="init"           prefix="hc.init"/&gt;
+  &lt;button role="hc1" command="apply_settings" prefix="hc.apply"/&gt;
+  &lt;button role="hc1" command="load_tables"    prefix="hc.loadTables"/&gt;
+  &lt;button role="hc1" command="chop"           prefix="hc.chop"/&gt;
+&lt;/plugin&gt;</pre></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="draft">
+  <h2>7 · Changes vs. the existing draft (<code>nomad-modules/HeidelbergChopper-Design.md</code>, 2026-09-15)</h2>
+  <div class="card"><table>
+    <tr><th>Draft says</th><th>Proposed here</th><th>Why</th></tr>
+    <tr><td>"<code>open_shutter.sh</code> loads open.dat into the OFF slot and triggers go-to-OFF"</td><td>open = ON slot, close = OFF slot</td><td>The current scripts (edited 17–18 Sep) run <code>--load_table 1 1</code> + <code>--start 2 0 1</code> for open, which is ON. It also matches the input edges (rising = ON)</td></tr>
+    <tr><td>The Real backend opens <code>/dev/ttyUSB</code> itself and keeps <code>uart.cpp</code> (sp15000 style)</td><td><b>Same approach (option 3)</b>, but <code>uart.cpp</code> is replaced by <code>PosixLink</code> + a forwarding <code>uart</code>, and the port comes from <code>port_device_name</code></td><td><code>uart.cpp</code> hides timeouts and reads byte by byte; <code>PosixLink</code> gives exact reads and exceptions</td></tr>
+    <tr><td>Custom <code>OPEN/CLOSE/CHOP</code> commands + <code>targetChannel</code> property</td><td>Implement <code>StateIOCommon</code>; two stock <code>shutter</code> controllers with masks; only <code>chop</code> is custom</td><td>No new controller code, and open/close work in scans and sequences out of the box</td></tr>
+    <tr><td>Load-then-trigger on every move</td><td>Resident tables; only chop re-points a range register</td><td>2048-entry RAM; faster; keeps external triggers valid</td></tr>
+    <tr><td>9.4: is execute() too slow?</td><td>No. The upload is ~8 ms; the move completes through READ polling</td><td>§3.2 timing</td></tr>
+    <tr><td>—</td><td>Busy-check → trigger → confirm; drift detection; overheat interlock from on-board sensors</td><td>Dropped-trigger analysis; an FPGA refresh wipes everything</td></tr>
+    <tr><td>Fixes the draft doesn't mention</td><td>Exact-length reads, complete writes, locking one level above <code>WriteBuffer</code>/<code>ReadBuffer</code>; the bugs from code map §9</td><td>§3.2 contract; byte traces in §3.3</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="open">
+  <h2>8 · Open questions</h2>
+  <div class="card"><ol style="margin:0;padding-left:20px">
+    <li><b>Position feedback.</b> Are the four light-switch inputs (<code>H_STAT</code> b16..19) wired as end-of-travel sensors (two per channel)? If so, <code>actual_value</code> should come from them, giving real position instead of "last completed move".</li>
+    <li><b>Chop.</b> A single triggered motion, or repeated with a period? This decides whether a custom controller is needed.</li>
+    <li><b>External triggers in production.</b> Will AFBR/OCPL drive the shutter directly? If so, NOMAD's state can drift from the hardware, because the FPGA moves on its own. READ must then derive the state from the input level plus busy, not from software commands.</li>
+    <li><b>Placement in the instrument configuration</b> <span class="tag warn">confirm on the ILL image</span>: where does <code>sp15000</code> sit (which parent)? Do the same, and make sure no <code>RS232Port</code> root also opens the board's tty. Mention the option-3 choice to the NOMAD maintainers at review.</li>
+    <li><b>Framework details</b> <span class="tag warn">confirm on the ILL image</span>: the exact <code>DynamicArrayProperty</code> type, <code>registerSpyCommand</code> interval units, and error codes for <code>sendErrorEvent</code>. With option 3, the binary <code>DeviceDriver::write/read</code> signatures no longer matter.</li>
+    <li><b>Naming.</b> Keep <code>heidelbergchopper</code> (from the draft), or name it after the board (<code>n219hbridge</code>)?</li>
+  </ol></div>
+</section>
+
+<section id="order">
+  <h2>9 · Implementation roadmap, step by step</h2>
+  <p class="lead">The guiding idea: <b>do as much as possible outside NOMAD</b>, where you can compile in seconds with the existing Makefile and test against the real board. Move into <code>nomad-modules</code> only once the hardware logic is proven. There is <b>no NOMAD installation on this machine</b> (no <code>NOMAD_HOME</code>, no core headers), so phases 0–2 are also the only ones you can start today.</p>
+
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  P0["0 · Baseline<br/>git, golden traces,<br/>bench numbers"] --> P1["1 · Portable core<br/>n219/ + N219Board<br/>+ bug fixes"]
+  P1 --> P2["2 · PosixLink<br/>exact reads, full writes,<br/>exceptions, 4 Mbit/s"]
+  P2 --> P3["3 · NOMAD toolchain<br/>ILL image, build existing<br/>modules, probe driver"]
+  P3 --> P4["4 · Driver skeleton<br/>Perfect backend,<br/>settings GUI"]
+  P4 --> P5["5 · Real, read-only<br/>STATUS / READ"]
+  P5 --> P6["6 · Settings write<br/>refreshers, INIT,<br/>drift detect"]
+  P6 --> P7["7 · Moves<br/>tables, START/STOP,<br/>shutter controllers"]
+  P7 --> P8["8 · Chop, ADC,<br/>overheat, DAC EEPROM"]
+  P8 --> P9["9 · Integration<br/>sequencer, soak,<br/>failure injection"]
+  P9 --> P10["10 · Deploy<br/>instrument config,<br/>review, hand-over"]
+  classDef off fill:#dcf0e0,stroke:#2f7d4f
+  classDef on fill:#dbe6fb,stroke:#2f5fd0
+  class P0,P1,P2 off
+  class P3,P4,P5,P6,P7,P8,P9,P10 on
+  </pre>
+  <div class="legend"><span><span class="tag pure">green</span> compiled with g++/Makefile, no NOMAD needed</span><span><span class="tag hw" style="background:var(--accent-soft);color:var(--accent)">blue</span> compiled in <code>nomad-modules</code> with <code>./build.sh</code></span></div>
+  </div>
+
+  <h3>Test layers: what each phase can prove</h3>
+  <div class="card"><table>
+    <tr><th>Layer</th><th>Needs</th><th>Proves</th><th>Used from phase</th></tr>
+    <tr><td><b>Unit tests on a mock link</b></td><td>g++ only</td><td>Byte-exact protocol (golden traces), table builder, move logic incl. dropped-trigger paths with scripted replies</td><td>1</td></tr>
+    <tr><td><b>Bench CLI</b> (<code>n219ctl</code>)</td><td>board on USB</td><td>The new facade drives the real FPGA the same way the scripts do</td><td>1</td></tr>
+    <tr><td><b>NOMAD + Perfect backend</b></td><td>NOMAD install</td><td>Properties, commands, GUI, controllers, persistence, all without hardware</td><td>4</td></tr>
+    <tr><td><b>NOMAD + Real backend</b></td><td>both</td><td>End-to-end behaviour, recovery, long-running stability</td><td>5</td></tr>
+  </table></div>
+  <div class="callout">Only one program can own the serial port. <b>Never run <code>hbr</code> / <code>n219ctl</code> while NOMAD has the driver initialised on the same port.</b> Stop NOMAD's driver (or use a second board) when you want to cross-check with the CLI.</div>
+
+  <h3 id="image">Using the ILL NOMAD image: two tracks in parallel</h3>
+  <p>With a real NOMAD installation available, the NOMAD work no longer waits for the bench work. Run two tracks and merge them at phase 5:</p>
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  subgraph A["Track A · bench (WSL + board)"]
+    direction TB
+    A0["0 · baseline, git,<br/>golden traces"] --> A1["1 · n219/ + N219Board<br/>+ n219ctl + unit tests"] --> A2["2 · PosixLink<br/>exact reads, exceptions"]
+  end
+  subgraph B["Track B · ILL NOMAD image"]
+    direction TB
+    B3["3 · check image, build<br/>untouched modules"] --> B4["4 · driver skeleton,<br/>Perfect backend, GUI,<br/>shutter controllers"]
+  end
+  A2 --> M["5 · Real backend<br/>(board reachable from image)"]
+  B4 --> M
+  M --> R["6 → 10"]
+  </pre></div>
+  <div class="card"><table>
+    <tr><th>Step on the image</th><th>What to check</th></tr>
+    <tr><td>Environment</td><td><code>NOMAD_HOME</code>, headers in <code>$NOMAD_HOME/src</code> (<code>Driver.h</code>, <code>Controller.h</code>), <code>bin/moduleloadsequencer.sh</code>, the <code>NOMAD_MODULE_CONFIG</code>/<code>NOMAD_MODULE_MODE</code> it uses</td></tr>
+    <tr><td>Version match</td><td>Which <code>nomad-modules</code> commit or tag matches the installed NOMAD. Build that, on a branch</td></tr>
+    <tr><td>Toolchain</td><td><code>./init.sh</code> and <code>./build.sh</code> on the untouched tree; start the server and client; switch to simulated mode</td></tr>
+    <tr><td>Conventions</td><td>How <code>sp15000</code> is placed in a configuration; <code>DynamicArrayProperty</code>; spy interval units; what the hardware tab looks like</td></tr>
+    <tr><td>Serial access</td><td>The board appears as <code>/dev/ttyACM0</code> or <code>/dev/ttyUSB0</code> with read/write permission for the NOMAD server user (<code>dialout</code> group); <code>n219ctl status</code> works inside the image</td></tr>
+  </table></div>
+  <div class="card"><b>Getting the board to the image</b>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li><b>USB passthrough</b>: VirtualBox or VMware USB filter; for Hyper-V/WSL use <code>usbipd</code>. Needed for timing and soak tests.</li>
+      <li><b>Network serial bridge</b> for early functional tests: on the machine with the board, run <code>ser2net</code> or <code>socat tcp-listen:5000,reuseaddr file:/dev/ttyACM0,raw,b4000000</code>. In the image, run <code>socat pty,link=/dev/ttyN219,raw tcp:&lt;host&gt;:5000</code> and set <code>port_device_name=/dev/ttyN219</code>. This works because with option 3 the driver opens any path it's given. It adds latency, so don't use it for timing tests.</li>
+      <li><b>Image installed on the PC next to the board</b>: closest to production.</li>
+    </ul></div>
+  <div class="callout info"><b>Development loop:</b> keep <code>nomad-modules</code> in git and work on a branch; edit anywhere, sync to the image (<code>git pull</code> or <code>rsync</code>), run <code>./build.sh</code> (incremental), reload or restart the server, test. <code>n219/</code> lives only in that branch, and the bench Makefile builds from the same files.</div>
+
+  <!-- PHASE 0 -->
+  <h3>Phase 0 · Baseline and safety net <span class="tag pure">no NOMAD</span></h3>
+  <div class="card"><ol style="margin:0;padding-left:20px">
+    <li><b>Version control first.</b> <code>PROJECTS/N219_4x_H-Bridge/C</code> is not a git repository. Run <code>git init</code> and commit the current, working state, so every later refactor can be compared against it.</li>
+    <li><b>Golden traces (offline).</b> Turn the byte-recording mock (§3.3) into a test tool that runs each <code>hbr</code> operation (<code>--set_pwm</code>, <code>--hbr_decay</code>, <code>--read_table … --load_table</code>, <code>--start</code>, <code>--adc_conf</code>, <code>--get_adc_buff</code>…) and saves the bytes to <code>tests/golden/*.txt</code>. These define "correct" for every later phase.</li>
+    <li><b>Golden traces (hardware).</b> <code>uart</code> can already log every real byte: <code>setLogFlag()</code> + <code>setLogFile()</code> in <code>uart.h</code>. Capture <code>initialize_fpga.sh</code>, <code>open_shutter.sh</code>, and <code>close_shutter.sh</code> once, including the replies.</li>
+    <li><b>Bench numbers</b> the design depends on:
+      <ul>
+        <li>register latency: <code>read_temps.sh --time</code></li>
+        <li>move busy time: poll <code>0x2002</code> during an open</li>
+        <li>table sizes after compression</li>
+        <li>RAM size: <code>hbr --hbr_rep</code> should report 2048</li>
+      </ul></li>
+    <li><b>Answer the design questions</b> in §8: light switches as end sensors? does chop repeat? will external triggers be used in production?</li>
+  </ol>
+  <p style="margin-bottom:0"><b>Done when:</b> the repo is committed, golden traces exist, and the numbers are written down.</p></div>
+
+  <!-- PHASE 1 -->
+  <h3>Phase 1 · Portable core: <code>n219/</code> + <code>N219Board</code> <span class="tag pure">no NOMAD</span></h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px">
+      <li><b>Fork the upstream files</b> into a new <code>n219/</code> folder: <code>uart32.*</code>, <code>C_hbr.*</code>, <code>C_ads131m04.*</code>, <code>C_dual_dac.*</code>, <code>dac_mcp47feb.h</code>, <code>C_dtemp.*</code>, <code>CLogger.*</code>. Don't edit <code>Lattice_XO2_UART/C/uart32.cpp</code> in place: many other FPGA projects share it.</li>
+      <li><b>Fix the bugs</b> from the code map's issue list that matter at runtime:
+        <ul>
+          <li><code>hw_rd_all_regs</code> out-of-bounds read</li>
+          <li><code>hw_wr_all_regs</code> brace placement</li>
+          <li><code>prepare_all_regs</code> header parameter order</li>
+          <li><code>read_adc_buffer</code> stack buffer and closing the caller's file</li>
+          <li>hidden I/O in <code>resample_power_profile</code></li>
+          <li><code>new[]</code> → <code>std::vector</code> in <code>SendBurst</code>/<code>RecvBurst</code>, so exceptions don't leak</li>
+        </ul>
+        After each fix, re-run the golden traces. They must be unchanged, except where a fix intentionally changes bytes (e.g. the <code>hw_wr_all_regs</code> response check).</li>
+      <li><b>Separate pure logic from I/O.</b> Move PWL parsing, resampling, and compression into a <code>TableBuilder</code> that takes a file or vector and returns entries plus a duration, with no printing and no register reads. Add validation: at least 2 entries, and it must fit its RAM region.</li>
+      <li><b>Write <code>N219Board</code></b>, the facade the NOMAD driver will call. It owns <code>uart32</code> and the four <code>C_*</code> objects, plus one <code>std::recursive_mutex</code>, and reports failures as exceptions. Its API is the list of functionality the driver needs:
+        <table style="margin-top:8px">
+          <tr><th>Area</th><th>N219Board methods</th></tr>
+          <tr><td>Identity / health</td><td><code>readIdentity()</code> (CPU build stamp), <code>readStatus()</code> → struct {fault_n, busy[2], inputs[2], lsw, config readback, ranges}</td></tr>
+          <tr><td>Configuration</td><td><code>applyConfig(const Config&amp;)</code> (all chip + per-channel settings), <code>verifyConfig(const Config&amp;)</code> → drift list</td></tr>
+          <tr><td>Tables</td><td><code>uploadTables(ch, open, close, chop)</code> with the RAM layout from §4.6; <code>pointOnRangeAt(ch, region)</code></td></tr>
+          <tr><td>Motion</td><td><code>move(ch, OPEN|CLOSE)</code> = busy check → trigger → confirm; <code>isBusy(ch)</code>; <code>abort(ch)</code> (sm_reset); <code>chop(ch)</code></td></tr>
+          <tr><td>Current limit</td><td><code>setCurrentLimit(ch, V)</code>, <code>saveCurrentLimitsToEeprom()</code>, <code>readCurrentLimits()</code></td></tr>
+          <tr><td>Temperatures</td><td><code>readTemperatures()</code> → Pt100[2], DS18B20[2], presence</td></tr>
+          <tr><td>ADC</td><td><code>configureAdc(rate, 16bit, gc, mux)</code>, <code>captureBuffer()</code> → scaled channels</td></tr>
+        </table></li>
+      <li><b>Write <code>n219ctl</code></b>, a small CLI on top of <code>N219Board</code>: <code>n219ctl init</code>, <code>open 1</code>, <code>close 1</code>, <code>status</code>, <code>capture</code>… It exercises the facade on the bench exactly the way the NOMAD driver will.</li>
+      <li><b>Unit tests</b> on the mock link (a <code>tests/</code> target in the Makefile, plain asserts or GoogleTest):
+        <ul>
+          <li>golden-trace comparisons</li>
+          <li><code>TableBuilder</code> edge cases</li>
+          <li><code>move()</code> with scripted busy replies: accepted, dropped-then-retried, busy-rejected, and timeout</li>
+        </ul></li>
+    </ol>
+    <p style="margin-bottom:0"><b>Done when:</b> <code>n219ctl open/close</code> on the bench matches <code>open_shutter.sh</code>/<code>close_shutter.sh</code>: same bytes, and the same ADC capture when compared with <code>plot_adc_buffer.py</code>. All unit tests pass.</p>
+  </div>
+
+  <!-- PHASE 2 -->
+  <h3>Phase 2 · <code>PosixLink</code>, the serial layer <span class="tag pure">no NOMAD</span></h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px">
+      <li>Write <code>n219/PosixLink.h/.cpp</code> (§3.4): termios raw mode at 4 Mbit/s, the low-latency ioctl, an <b>exact-length read loop</b> with <code>poll()</code> and a timeout, a full-write loop, and <code>LinkError</code> on every failure. <b>This is the production serial layer</b>: with option 3 the NOMAD driver uses it unchanged.</li>
+      <li>Replace <code>n219/uart.h</code> with the forwarder (§3.5), so <code>WriteBuffer</code>/<code>ReadBuffer</code> call <code>PosixLink</code>, and give <code>uart32</code> a constructor taking <code>PosixLink*</code>. Add the lock in <code>SendBurst</code>/<code>RecvBurst</code>, and use <code>std::vector</code> in place of <code>new[]</code>.</li>
+      <li>For offline tests, the recording mock (§3.3) stays available at the <code>uart</code> level, or <code>PosixLink</code> can talk to a <code>socat</code> pseudo-terminal with a small fake-FPGA script on the other end.</li>
+      <li>Point <code>n219ctl</code> at <code>PosixLink</code>. Test on the bench, including <b>pulling the USB cable</b> mid-command: you must get a clean exception and recover on reconnect, not garbage.</li>
+    </ol>
+    <p style="margin-bottom:0"><b>Done when:</b> everything from phase 1 still passes over <code>PosixLink</code>, and failures are loud. At this point <b>all hardware-facing code is finished and bench-proven. What remains is only the NOMAD driver shell around it.</b></p>
+  </div>
+
+  <!-- PHASE 3 -->
+  <h3>Phase 3 · NOMAD toolchain and the port driver <span class="tag hw" style="background:var(--accent-soft);color:var(--accent)">first nomad-modules compile</span></h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px">
+      <li><b>Use the ILL NOMAD image</b> (see "Using the ILL NOMAD image" above). Check <code>NOMAD_HOME</code>, the <code>src/</code> headers, <code>bin/moduleloadsequencer.sh</code>, the <code>mod/</code> install directory, and which NOMAD version it matches in <code>nomad-modules</code>.</li>
+      <li><b>Restrict the build</b> to what you need. <code>NOMAD_MODULE_CONFIG</code> points to an XML file read by the module generator:
+<pre class="mono" style="white-space:pre-wrap;margin:6px 0">&lt;modules&gt;
+  &lt;include name="stateio"/&gt;          &lt;!-- shutter controller --&gt;
+  &lt;include name="heidelbergchopper"/&gt; &lt;!-- added in phase 4 --&gt;
+  &lt;!-- plus any modules these depend on --&gt;
+&lt;/modules&gt;</pre>
+        Set <code>NOMAD_MODULE_MODE</code> as ILL does. The jar mentions the values <code>all</code> / <code>lib</code>; <span class="tag warn">confirm</span> with the NOMAD team.</li>
+      <li><b>Build once, unchanged:</b> <code>./init.sh</code> (generator + <code>cmake -DCMAKE_BUILD_TYPE=Debug</code>, optionally <code>sanitize-address</code>), then <code>./build.sh</code> (generator + <code>make install</code> into <code>$NOMAD_HOME/mod</code> + <code>moduleloadsequencer.sh</code>). Getting an untouched tree to build and load is a separate milestone from building your own code.</li>
+      <li><b>Confirm the framework API</b> in <code>$NOMAD_HOME/src</code>: the <code>DynamicArrayProperty</code> name, how <code>registerSpyCommand</code> intervals are expressed, <code>sendErrorEvent</code> codes, and how <code>sp15000</code> is placed in a configuration (§3.0).</li>
+      <li><b>Get the board to the image</b>: USB passthrough, or a network serial bridge for early tests (see above). Check that <code>/dev/ttyACM0</code> or <code>/dev/ttyUSB0</code> appears and that <code>n219ctl status</code> works <b>inside the image</b> before any NOMAD code is involved.</li>
+      <li><b>Probe</b>: a throwaway driver whose <code>INIT</code> opens <code>PosixLink(port_device_name, speed)</code> and reads <code>0x2003</code> and <code>0x0808/0x0809</code> through <code>uart32</code>. Compare with <code>n219ctl</code>, then read the 16 KB ADC buffer to prove long reads work from inside the NOMAD server process.</li>
+    </ol>
+    <p style="margin-bottom:0"><b>Done when:</b> an untouched <code>nomad-modules</code> build works on the image, and the probe's register and ADC-buffer reads from inside NOMAD match <code>n219ctl</code> byte for byte.</p>
+  </div>
+
+  <!-- PHASE 4 -->
+  <h3>Phase 4 · Driver skeleton with the Perfect backend <span class="tag hw" style="background:var(--accent-soft);color:var(--accent)">nomad-modules</span></h3>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px">
+      <li>Create <code>src/drivers/ill/heidelbergchopper/</code> as in §4.1, with the <code>n219/</code> sources copied in. Keep <b>one canonical copy</b> of <code>n219/</code> (e.g. in nomad-modules) and make the bench Makefile build from it, so they can't drift apart.</li>
+      <li>Write <code>HeidelbergChopperDriver</code> with <b>all properties and commands</b> (§4.2, §5), the State interface, and <code>PerfectHeidelbergChopperDriver</code>. The Perfect backend fakes moves that take the table's duration, temperatures, and busy flags. Leave the Real backend as stubs.</li>
+      <li>Write the four <code>gui/</code> files (§6). Build with <code>./build.sh</code>.</li>
+      <li>In a test instrument configuration: a <code>heidelbergchopper</code> driver (placed like <code>sp15000</code>; <code>port_device_name</code>, <code>speed</code>), plus two <code>shutter</code> controllers with masks <code>0x3</code>/<code>0xC</code> and values 1/2 and 4/8 (§4.3).</li>
+    </ol>
+    <p style="margin-bottom:0"><b>Test:</b> in the simulated run mode, the hardware tab shows every setting. Values survive a server restart (SAVE). Shutter open/close goes through "moving" to the final state after the fake duration. STOP aborts. <b>Done when</b> the whole user experience works with no board attached.</p>
+  </div>
+
+  <!-- PHASE 5 -->
+  <h3>Phase 5 · Real backend, read-only</h3>
+  <div class="card">
+    <p style="margin-top:0"><code>INIT</code> creates <code>PosixLink</code> → <code>uart32</code> → <code>N219Board</code> and reads identity. <code>STATUS</code>/<code>READ</code> fill the readback properties (§5.3). <b>Nothing is written yet.</b></p>
+    <p style="margin-bottom:0"><b>Test:</b> compare the readbacks with <code>hbr --status --hbr_rep</code> (with NOMAD stopped). Unplug the board: the driver goes to error with a clear message and recovers on <code>INIT</code>. Run with the spy/observer polling active for an hour and check for no errors and no memory growth (the <code>init.sh sanitize-address</code> build helps here).</p>
+  </div>
+
+  <!-- PHASE 6 -->
+  <h3>Phase 6 · Settings write path</h3>
+  <div class="card">
+    <p style="margin-top:0">Refreshers → <code>N219Board::applyConfig</code> for each setting. <code>APPLY_SETTINGS</code> and <code>INIT</code> push everything (this replaces <code>initialize_fpga.sh</code>). <code>STATUS</code> runs <code>verifyConfig</code> → <code>config_in_sync</code>.</p>
+    <p style="margin-bottom:0"><b>Test:</b> change each setting in the hardware tab and confirm it with <code>hbr --hbr_rep</code>. Run <code>make refresh</code> on the FPGA: the driver must flag drift, and re-apply if that's configured. Enter invalid values (a VREF over 3.3 V, an unsupported PWM frequency): they must be rejected with <code>CannotSetValue</code>, not clamped silently.</p>
+  </div>
+
+  <!-- PHASE 7 -->
+  <h3>Phase 7 · Tables and moves</h3>
+  <div class="card">
+    <p style="margin-top:0">Add <code>LOAD_TABLES</code>, <code>START</code> (<code>getWanted()</code> → <code>move</code>), <code>STOP</code> (abort), and <code>READ</code> (busy → state encoding and progression), plus move timeouts.</p>
+    <ol style="margin:0;padding-left:20px">
+      <li><b>Dry run with power off:</b> set <code>bridge_enable = 0</code> (SLEEP_n). The sequencer runs and busy toggles, but the coil gets no current. This tests the whole software path safely.</li>
+      <li><b>Reduced current:</b> a low <code>current_limit_v</code>, then the normal value.</li>
+      <li><b>Compare with the scripts:</b> run open/close from NOMAD and from <code>open_shutter.sh</code>, capture the ADC buffer each time, and overlay the plots.</li>
+      <li><b>Dropped-trigger tests:</b> a second START during a move (must be a no-op or an error), an external AFBR pulse shorter than the table, and FSM reset in the middle of a move.</li>
+    </ol>
+    <p style="margin-bottom:0"><b>Done when</b> the two <code>shutter</code> controllers open and close reliably, report the correct states, and never silently lose a command.</p>
+  </div>
+
+  <!-- PHASE 8 -->
+  <h3>Phase 8 · Remaining functions</h3>
+  <div class="card"><ul style="margin:0;padding-left:20px">
+    <li><code>CHOP</code> (range re-pointing, restore, and the external-input caveat).</li>
+    <li><code>CONFIGURE_ADC</code> / <code>CAPTURE_ADC</code> into array properties, so there's a plot in the GUI.</li>
+    <li><b>Overheat interlock</b> from the on-board Pt100/DS18B20: clear hold, refuse moves, raise an error event. Test it by lowering the threshold below room temperature.</li>
+    <li><code>SAVE_VREF_EEPROM</code>.</li>
+    <li>If chop repeats (§8 Q2): the thin <code>heidelbergchopper</code> controller now, following <code>ChoppersExpert</code>.</li>
+  </ul></div>
+
+  <!-- PHASE 9 -->
+  <h3>Phase 9 · Integration, soak, and failure injection</h3>
+  <div class="card"><ul style="margin:0;padding-left:20px">
+    <li><b>NOMAD sequencer script</b> doing what <code>close_then_open_v2.sh</code> does: N open/close cycles, logging temperatures. Run it for hours.</li>
+    <li><b>Failure injection</b> during that run: USB unplug, FPGA power cycle, FPGA refresh, NOMAD server restart, overheat. Each needs a defined outcome, written down.</li>
+    <li>Scans that use the shutters, and the command view as users see it.</li>
+  </ul></div>
+
+  <!-- PHASE 10 -->
+  <h3>Phase 10 · Deployment</h3>
+  <div class="card"><ul style="margin:0;padding-left:20px">
+    <li>A branch in the <code>nomad-modules</code> git repository; code review with ILL, including the option-3 serial approach.</li>
+    <li>Instrument configuration for the real instrument; default SAVE values captured from the bench.</li>
+    <li>A short operator note (what each setting does, what the states mean, how to recover) and an expert note (waveform files, re-flashing, bench tools).</li>
+    <li>Keep <code>hbr</code> / <code>n219ctl</code> as bench tools; they share <code>n219/</code> with the driver.</li>
+  </ul></div>
+
+  <h3>Functionality checklist</h3>
+  <div class="card"><table>
+    <tr><th>Functionality</th><th>Phase</th><th>Where it lives</th></tr>
+    <tr><td>Exact, locked, exception-raising byte transport</td><td>2</td><td><code>PosixLink</code> + <code>uart</code> forwarder + lock in <code>uart32</code></td></tr>
+    <tr><td>Connection, identity, reconnect</td><td>5</td><td>INIT, readIdentity</td></tr>
+    <tr><td>Health readback (fault, busy, inputs, temps)</td><td>5</td><td>STATUS / READ</td></tr>
+    <tr><td>Apply, verify, and re-apply configuration</td><td>6</td><td>refreshers, APPLY_SETTINGS, drift check</td></tr>
+    <tr><td>Waveform file → table, resident RAM layout</td><td>1 · 7</td><td>TableBuilder, LOAD_TABLES</td></tr>
+    <tr><td>Open / close with trigger confirmation</td><td>1 · 7</td><td>move(), START / READ, shutter controllers</td></tr>
+    <tr><td>Abort</td><td>7</td><td>STOP → sm_reset</td></tr>
+    <tr><td>Chop</td><td>8</td><td>CHOP command (maybe a controller)</td></tr>
+    <tr><td>Current limit (DAC) + EEPROM</td><td>6 · 8</td><td>refresher, SAVE_VREF_EEPROM</td></tr>
+    <tr><td>ADC configure / capture / plot</td><td>8</td><td>CONFIGURE_ADC, CAPTURE_ADC</td></tr>
+    <tr><td>Overheat interlock</td><td>8</td><td>STATUS observer</td></tr>
+    <tr><td>Simulation without hardware</td><td>4</td><td>Perfect backend</td></tr>
+    <tr><td>Hardware-tab GUI; user controls</td><td>4</td><td>driver gui/; stock shutter command view</td></tr>
+    <tr><td>Logging and error events</td><td>all</td><td>CLogger shim → NOMAD log; sendErrorEvent</td></tr>
+  </table></div>
+</section>
+
+</main>
+</div>
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+const root = document.documentElement;
+function isDark() {
+  const t = root.getAttribute('data-theme');
+  if (t) return t === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+const sources = [...document.querySelectorAll('pre.mermaid')].map(el => el.textContent);
+
+async function render() {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark() ? 'dark' : 'default',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    securityLevel: 'loose',
+    flowchart: { curve: 'basis', htmlLabels: true },
+    sequence: { mirrorActors: false, showSequenceNumbers: false }
+  });
+  document.querySelectorAll('pre.mermaid').forEach((el, i) => {
+    el.removeAttribute('data-processed');
+    el.innerHTML = '';
+    el.textContent = sources[i];
+  });
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+}
+render();
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+  try { localStorage.setItem('n219-theme', root.getAttribute('data-theme')); } catch (e) {}
+  render();
+});
+try {
+  const saved = localStorage.getItem('n219-theme');
+  if (saved) { root.setAttribute('data-theme', saved); render(); }
+} catch (e) {}
+
+// filter across function tables
+const input = document.getElementById('fnSearch');
+if (input) input.addEventListener('input', () => {
+  const q = input.value.trim().toLowerCase();
+  document.querySelectorAll('table.fn tr').forEach(tr => {
+    if (tr.querySelector('th')) return;
+    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

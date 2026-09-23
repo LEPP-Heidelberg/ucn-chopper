@@ -1,0 +1,22 @@
+# build output
+*.o
+host/hbr
+host/xo3d_fpga8_32
+*.exe
+
+# generated at runtime by hbr / the scripts
+res_wave.dat
+adc.dat
+*.log
+plot.png
+*.png
+
+# WSL / Windows artefacts
+*:Zone.Identifier
+__pycache__/
+*.pyc
+
+# editors
+.vscode/
+.idea/
+*.swp

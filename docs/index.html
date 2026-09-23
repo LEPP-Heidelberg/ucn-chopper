@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N219 H-Bridge Code Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --surface-2: #f0f0ec; --border: #dcdcd6;
+  --text: #1d1d1b; --muted: #62625d; --accent: #2f5fd0; --accent-soft: #e5ecfb;
+  --hw: #b8581a; --hw-soft: #fbeee4; --pure: #2f7d4f; --pure-soft: #e3f3e9;
+  --warn: #a4331f; --warn-soft: #fbe7e3; --code-bg: #f0f0ec;
+  --f-uart: #dbe6fb; --f-hbr: #fde2cf; --f-ads: #dcf0e0; --f-dac: #efe0f7; --f-dt: #fdf2c9; --f-cfg: #e6e6e2; --f-mem: #d8eef2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151514; --surface: #1d1d1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #ecece8; --muted: #a3a39c; --accent: #86a8f5; --accent-soft: #23304d;
+    --hw: #f0a16a; --hw-soft: #3d2718; --pure: #7fcf9d; --pure-soft: #1d3326;
+    --warn: #f28b76; --warn-soft: #402019; --code-bg: #262624;
+    --f-uart: #26344f; --f-hbr: #4a3020; --f-ads: #203a27; --f-dac: #3a2847; --f-dt: #413a1c; --f-cfg: #33332f; --f-mem: #1f3a40;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151514; --surface: #1d1d1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #ecece8; --muted: #a3a39c; --accent: #86a8f5; --accent-soft: #23304d;
+  --hw: #f0a16a; --hw-soft: #3d2718; --pure: #7fcf9d; --pure-soft: #1d3326;
+  --warn: #f28b76; --warn-soft: #402019; --code-bg: #262624;
+  --f-uart: #26344f; --f-hbr: #4a3020; --f-ads: #203a27; --f-dac: #3a2847; --f-dt: #413a1c; --f-cfg: #33332f; --f-mem: #1f3a40;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 Inter, system-ui, sans-serif; }
+code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.86em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--accent); }
+.layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 1px solid var(--border); padding: 20px 16px; background: var(--surface); }
+nav h1 { font-size: 16px; margin: 0 0 2px; }
+nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 16px; }
+nav a { display: block; color: var(--text); text-decoration: none; padding: 5px 8px; border-radius: 6px; font-size: 13.5px; }
+nav a:hover { background: var(--surface-2); }
+nav a.sub2 { padding-left: 22px; color: var(--muted); font-size: 13px; }
+nav .tools { margin-top: 16px; display: flex; gap: 8px; }
+button { font: inherit; font-size: 13px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+main { padding: 32px 40px 80px; max-width: 1180px; min-width: 0; }
+section { margin-bottom: 56px; }
+h2 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em; }
+h3 { font-size: 17px; margin: 28px 0 8px; }
+p.lead { color: var(--muted); margin-top: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin: 14px 0; overflow-x: auto; }
+.mermaid { display: flex; justify-content: center; min-width: 600px; }
+.mermaid svg { max-width: 100%; height: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-weight: 600; background: var(--surface-2); position: sticky; top: 0; }
+td:first-child { white-space: nowrap; }
+td code { white-space: nowrap; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; margin-left: 4px; vertical-align: 1px; }
+.tag.hw { background: var(--hw-soft); color: var(--hw); }
+.tag.pure { background: var(--pure-soft); color: var(--pure); }
+.tag.warn { background: var(--warn-soft); color: var(--warn); }
+.bus { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--hw); }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 14px; }
+.callout.info { border-color: var(--accent); background: var(--accent-soft); }
+.search { width: 100%; padding: 9px 12px; font: inherit; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); margin: 6px 0 4px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 8px 0; }
+/* packet diagram */
+.packet { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.byte { border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px; min-width: 96px; background: var(--surface-2); }
+.byte .n { font-weight: 600; font-size: 13px; }
+.byte .d { font-size: 12px; color: var(--muted); }
+.byte.opt { border-style: dashed; }
+.byte.data { background: var(--f-uart); }
+.byte.reply { background: var(--f-ads); }
+/* bitfields */
+.bits { display: grid; gap: 2px; margin: 10px 0 4px; font-size: 12px; }
+.bits .cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 6px 4px; text-align: center; min-width: 0; overflow: hidden; }
+.bits .num { background: none; border: none; color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 11px; padding: 0; }
+/* memory map */
+.memmap { display: grid; grid-template-columns: 110px 1fr; gap: 3px 10px; font-size: 13px; }
+.memmap .addr { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); text-align: right; padding-top: 7px; }
+.memmap .blk { border-radius: 6px; padding: 7px 12px; border: 1px solid var(--border); }
+.memmap .blk b { font-weight: 600; }
+.memmap .blk span { color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* timelines */
+.tl { margin: 10px 0 0; display: grid; gap: 6px; }
+.tl-row { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 10px; font-size: 12.5px; }
+.tl-lbl { color: var(--muted); text-align: right; }
+.tl-track { position: relative; height: 26px; background: var(--surface-2); border-radius: 6px; }
+.tl-bar { position: absolute; top: 3px; bottom: 3px; border-radius: 4px; padding: 0 8px; font-size: 11.5px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-bar.sig { background: var(--f-uart); }
+.tl-bar.busy { background: var(--f-hbr); }
+.tl-bar.held { background: var(--warn-soft); color: var(--warn); }
+.tl-mark { position: absolute; top: 4px; font-size: 11.5px; font-weight: 600; white-space: nowrap; transform: translateX(-2px); }
+.tl-mark.ok { color: var(--pure); }
+.tl-mark.bad { color: var(--warn); }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  main { padding: 20px 16px 60px; }
+  .two { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h1>N219 H-Bridge</h1>
+  <div class="sub">Host code map · UART32 interface<br>for the NOMAD port · 2026-09-22</div>
+  <a href="#system">1 · System picture</a>
+  <a href="#layers">2 · Code layers</a>
+  <a href="#uart32">3 · UART32 protocol</a>
+  <a href="#uart32-fns" class="sub2">uart / uart32 functions</a>
+  <a href="#xo3d" class="sub2">one_xo3d_fpga8_32</a>
+  <a href="#addrmap">4 · FPGA address map</a>
+  <a href="#bitfields" class="sub2">Bit fields</a>
+  <a href="#classes">5 · Functions by class</a>
+  <a href="#c_hbr" class="sub2">C_hbr</a>
+  <a href="#c_ads" class="sub2">C_ads131m04</a>
+  <a href="#c_dac" class="sub2">C_dual_dac</a>
+  <a href="#c_dtemp" class="sub2">C_dtemp / C_simpl_stat</a>
+  <a href="#cli">6 · hbr CLI dispatch</a>
+  <a href="#flows">7 · Operational flows</a>
+  <a href="#flow-bringup" class="sub2">Bring-up</a>
+  <a href="#flow-table" class="sub2">Waveform → table</a>
+  <a href="#flow-move" class="sub2">Open / close shutter</a>
+  <a href="#dropped" class="sub2">⚠ Dropped triggers</a>
+  <a href="#flow-adc" class="sub2">ADC configuration</a>
+  <a href="#flow-dac" class="sub2">DAC write over I2C</a>
+  <a href="#build">8 · Build &amp; files</a>
+  <a href="#issues">9 · Issues found</a>
+  <a href="#nomad">10 · NOMAD seams</a>
+  <a href="nomad.html" style="font-weight:600;color:var(--accent)">→ NOMAD port plan</a>
+  <div class="tools"><button id="themeBtn">Toggle theme</button></div>
+</nav>
+
+<main>
+
+<!-- ============================================================ -->
+<section id="system">
+  <h2>1 · System picture</h2>
+  <p class="lead">A Linux host talks UART32 to a Lattice MachXO3D-9400 FPGA. The FPGA drives two H-bridge motor channels and hosts the ADC, DAC, and temperature peripherals.</p>
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  subgraph HOST["Linux host (RP4 / PC / WSL)"]
+    direction TB
+    SH["shell scripts<br/>initialize_fpga.sh, open/close_shutter.sh"]
+    CLI["hbr CLI<br/>one process per call"]
+    CLS["C_hbr · C_ads131m04<br/>C_dual_dac · C_dtemp"]
+    U32["uart32<br/>packet protocol"]
+    U["uart<br/>termios bytes"]
+    SH --> CLI --> CLS --> U32 --> U
+  end
+  U <==>|"4 Mbit/s serial<br/>/dev/ttyACM0 USB-CDC<br/>/dev/ttyUSB0 optical"| SL
+  subgraph FPGA["MachXO3D FPGA · board ID 1"]
+    direction TB
+    SL["UART32 slave<br/>24-bit addr / 32-bit data bus"]
+    CFG["config / CSR 0x0100"]
+    SPI["ADS131M04 SPI master 0x0400"]
+    I2C["I2C master 0x0480"]
+    OW["1-wire master 0x0490"]
+    CPU["SW32 soft CPU<br/>IMEM 0x4000, shared mem 0x0800"]
+    HB["H-bridge block 0x2000<br/>PWM + sequencer + seq RAM"]
+    BUF["ADC capture buffer 0x6000"]
+    SL --> CFG & SPI & I2C & OW & CPU & HB & BUF
+    SPI -. samples .-> BUF
+    HB -. store trigger .-> BUF
+  end
+  SPI --> ADC["2× ADS131M04<br/>V, I, IPROP, Pt100 per bridge"]
+  I2C --> DAC["MCP47FEB dual DAC<br/>VREF = current limit"]
+  OW --> DS["2× DS18B20<br/>top / bottom of bridge"]
+  HB --> M0["H-bridge ch0 → motor 0"]
+  HB --> M1["H-bridge ch1 → motor 1"]
+  DAC --> M0 & M1
+  TRG["AFBR / OCPL<br/>external trigger inputs"] --> HB
+  </pre></div>
+  <div class="two">
+    <div class="card" style="margin:0">
+      <b>Two motor channels.</b> Each channel has its own sequence RAM holding an <i>ON</i> table (open) and an <i>OFF</i> table (close). A trigger plays the table: for each entry, the given H-bridge state and PWM power are held for N PWM periods. The trigger comes from software (<code>0x2007</code>) or from the external AFBR/OCPL inputs.
+    </div>
+    <div class="card" style="margin:0">
+      <b>Measurement.</b> When a sequence starts, the FPGA streams the ADC channels of that bridge into the capture buffer. Afterwards the host reads the buffer back with <code>--get_adc_buff</code>. The SW32 CPU publishes the Pt100 readings in shared memory.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="layers">
+  <h2>2 · Code layers &amp; dependencies</h2>
+  <p class="lead">Each device class holds only a <code>uart32*</code>. All hardware traffic funnels through the methods on the orange edges.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TD
+  MAIN["hbr.cpp · main()<br/>2-pass argv dispatcher"]
+  subgraph LOCAL["This directory"]
+    HBR["C_hbr<br/>H-bridge cfg, PWM, sequencer,<br/>tables, shared mem, ADC buffer, Pt100"]
+    ADS["C_ads131m04<br/>register model + SPI-master access"]
+    DAC["C_dual_dac<br/>I2C master + MCP47FEB"]
+    DT["C_dtemp<br/>DS18B20"]
+    ST["C_simpl_stat<br/>stats, no HW"]
+  end
+  subgraph UP["Upstream ../../../C"]
+    U32["uart32"]
+    U["uart"]
+    LOG["CLogger"]
+    XO["one_xo3d_fpga8_32<br/>linked but unused by hbr"]
+  end
+  MAIN --> HBR & ADS & DAC & DT & ST
+  MAIN -. "SendBreak, WriteSingleByte,<br/>Read* for --rd_reg" .-> U32
+  HBR -- "Write/Read 1-4 B, SendBurst24,<br/>RecvBurst16, RecvBurst32" --> U32
+  ADS -- "WriteAuto, Write/ReadDWord,<br/>Send/RecvBurst32, WriteByte" --> U32
+  DAC -- "Write/ReadDWord, Send/RecvBurst32" --> U32
+  DT -- "Read/WriteWord, ReadDWord,<br/>WriteByte, RecvBurst16" --> U32
+  XO --> U32
+  U32 == inherits ==> U
+  HBR & ADS & DAC & DT & XO -. inherits .-> LOG
+  linkStyle 6,7,8,9 stroke:#d0782f,stroke-width:2px
+  </pre></div>
+
+  <h3>Which uart32 methods are used, and by whom</h3>
+  <div class="card"><table>
+    <tr><th>uart32 method</th><th>Used by</th></tr>
+    <tr><td><code>WriteByte/Word/3Bytes/DWord</code></td><td><code>C_hbr::WriteReg</code>, <code>C_dual_dac::WriteReg</code>, <code>C_ads131m04</code>, <code>C_dtemp</code></td></tr>
+    <tr><td><code>ReadByte/Word/3Bytes/DWord</code></td><td><code>C_hbr::ReadReg</code>, <code>C_dual_dac::ReadReg</code>, <code>C_ads131m04</code>, <code>C_dtemp</code>, <code>hbr --rd_reg</code></td></tr>
+    <tr><td><code>WriteAuto</code></td><td><code>C_ads131m04::hw_sm_cmd</code></td></tr>
+    <tr><td><code>SendBurst(uint32_t*)</code></td><td><code>C_hbr::set_sh_mem</code> (IMEM), <code>C_ads131m04::hw_wr_reg / hw_rd_reg</code>, <code>C_dual_dac::i2c_write / i2c_write_read</code></td></tr>
+    <tr><td><code>SendBurst24</code></td><td><code>C_hbr::set_sh_mem24</code> → <b>sequence table upload</b></td></tr>
+    <tr><td><code>RecvBurst(uint16_t*)</code></td><td><code>C_hbr::get_sh_mem</code> → <b>ADC capture buffer</b>; <code>C_dtemp::get_temp</code></td></tr>
+    <tr><td><code>RecvBurst(uint32_t*)</code></td><td><code>C_hbr::hbr_rep_seq_table</code>, <code>C_ads131m04</code> (responses, samples, meters), <code>C_dual_dac::i2c_get_rdata</code></td></tr>
+    <tr><td><code>set_slave_mask / set_max_wsize / set_max_asize</code></td><td><code>hbr.cpp</code>, once at start (ID 1, 32-bit data, 24-bit address)</td></tr>
+    <tr><td><code>SendBreak / WriteSingleByte / BytesSent / BytesReceived</code></td><td><code>hbr.cpp</code> diagnostics</td></tr>
+    <tr><td><code>ClearReadBuff</code></td><td><code>one_xo3d_fpga8_32</code> only</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="uart32">
+  <h2>3 · The UART32 protocol</h2>
+  <p class="lead">The host is the master and the FPGA's bus is memory-mapped. There is <b>no ACK, no CRC, and no status byte</b>: a write is just bytes out, and a read sends a header and then reads exactly <i>n × word-size</i> bytes.</p>
+
+  <div class="card">
+    <b>Write packet</b> <span class="mono" style="color:var(--muted)">uart32::SendBurst · uart32.cpp:61</span>
+    <div class="packet">
+      <div class="byte opt"><div class="n">slave_mask</div><div class="d">board ID (1)<br>if mask &gt; 0</div></div>
+      <div class="byte"><div class="n">cmd</div><div class="d">see bits below</div></div>
+      <div class="byte opt"><div class="n">len_hi</div><div class="d">(psize−1)&gt;&gt;3<br>if full</div></div>
+      <div class="byte"><div class="n">addr[7:0]</div><div class="d">word address</div></div>
+      <div class="byte opt"><div class="n">addr[15:8]</div><div class="d">if full</div></div>
+      <div class="byte opt"><div class="n">addr[23:16]</div><div class="d">if full &amp; 24-bit</div></div>
+      <div class="byte data"><div class="n">data…</div><div class="d">psize words, each 1–4 B,<br>little-endian</div></div>
+    </div>
+    <b>Read packet</b> <span class="mono" style="color:var(--muted)">uart32::RecvBurst · uart32.cpp:269</span>
+    <div class="packet">
+      <div class="byte opt"><div class="n">slave_mask</div><div class="d">board ID</div></div>
+      <div class="byte"><div class="n">cmd</div><div class="d">R/W bit = 1</div></div>
+      <div class="byte opt"><div class="n">len_hi</div><div class="d">if full</div></div>
+      <div class="byte"><div class="n">addr ×1–3</div><div class="d">as above</div></div>
+      <div class="byte reply"><div class="n">← reply</div><div class="d">psize × (wsize+1) bytes<br>nothing else</div></div>
+    </div>
+    <b>cmd byte</b>
+    <div class="bits" style="grid-template-columns: repeat(8, 1fr)">
+      <div class="cell num">7</div><div class="cell num">6</div><div class="cell num">5</div><div class="cell num">4</div><div class="cell num">3</div><div class="cell num">2</div><div class="cell num">1</div><div class="cell num">0</div>
+      <div class="cell" style="background:var(--f-hbr)">full</div>
+      <div class="cell" style="background:var(--f-dt)">ainc</div>
+      <div class="cell" style="grid-column: span 3; background:var(--f-uart)">(psize−1) [2:0]</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-ads)">wsize 0..3 = 1..4 B</div>
+      <div class="cell" style="background:var(--f-dac)">R=1 / W=0</div>
+    </div>
+    <ul style="font-size:14px; margin-bottom:0">
+      <li>Length is 11 bits, so one burst carries 1–2048 words. <code>psize &gt; 8</code> forces <code>full=1</code>, and every caller here passes full=1.</li>
+      <li>An address selects a <b>word</b>, so consecutive registers are +1. With <code>ainc=1</code> the address increments per word.</li>
+      <li>The host writes and reads in 1024-byte chunks. <code>uart::ReadBuffer</code> calls <code>read()</code> once per byte with a 100 ms <code>VTIME</code>.</li>
+      <li>Each single-register access is a full USB round trip, typically around 1 ms for USB-serial (not measured here; <code>read_temps.sh --time</code> measures it). Polling loops pay that on every iteration.</li>
+    </ul>
+  </div>
+  <div class="callout"><b>Robustness gap:</b> return codes only report bad arguments. A timeout, an absent board, or a desynchronised stream is <b>never reported</b>, and reads return whatever is in the buffer. Nothing is thread-safe. A NOMAD driver needs a mutex around every packet, short-read detection, and <code>SendBreak</code>/reopen recovery.</div>
+
+  <h3 id="uart32-fns">uart / uart32 / CLogger functions</h3>
+  <div class="card"><table>
+    <tr><th>Function</th><th>What it does</th></tr>
+    <tr><td><code>uart(device, brate)</code></td><td>open(); blocking 8N1 raw mode, no flow control, VMIN=0, VTIME=1 (100 ms). An open failure is only reported with perror.</td></tr>
+    <tr><td><code>int2speed_t(br)</code></td><td>Converts an integer to a termios <code>Bxxxx</code> constant (falls back to 2 Mbit/s).</td></tr>
+    <tr><td><code>SendBreak(d)</code></td><td><code>tcsendbreak</code>. Resynchronises the slave.</td></tr>
+    <tr><td><code>WriteSingleByte / WriteBuffer</code></td><td><code>write()</code>. WriteBuffer always returns true.</td></tr>
+    <tr><td><code>ReadSingleByte / ReadBuffer</code></td><td><code>read()</code>. ReadBuffer retries a short read once, then carries on silently.</td></tr>
+    <tr><td><code>ClearReadBuff / uart_flush / checkDevice</code></td><td>Drains input, sleeps 30 ms, calls fstat.</td></tr>
+    <tr><td><code>setLogFile / setLogFlag / clrLogFlag / Debug</code></td><td>Byte-level tracing.</td></tr>
+    <tr><td><code>uart32(device, brate)</code></td><td>Defaults: no slave byte, 32-bit data words, 24-bit address.</td></tr>
+    <tr><td><code>set/get/push/pop_slave_mask</code></td><td>Board ID byte that prefixes every packet (16-deep stack).</td></tr>
+    <tr><td><code>set/get_max_wsize, set/get_max_asize</code></td><td>Bus data width (8–32) and address width (16/24).</td></tr>
+    <tr><td><code>SendBurst / RecvBurst (+ typed overloads)</code></td><td>Core burst write and read. <code>uint8/16/32</code> select wsize 0/1/3.</td></tr>
+    <tr><td><code>SendBurst24 / RecvBurst24</code></td><td>3-byte words. The int32 read overload sign-extends bit 23.</td></tr>
+    <tr><td><code>Read/WriteByte, Word, 3Bytes, DWord</code></td><td>Single-register access, built on bursts of 1.</td></tr>
+    <tr><td><code>WriteAuto(addr, v)</code></td><td>Picks the smallest write width that holds v.</td></tr>
+    <tr><td><code>CLogger::logWrite / logSetFiles</code></td><td>printf to stdout and an optional file. It is the base class of every device class.</td></tr>
+  </table></div>
+
+  <h3 id="xo3d">one_xo3d_fpga8_32 (FPGA config/flash, upstream)</h3>
+  <p>This class is linked into <code>hbr</code> but not used there. The <code>xo3d_fpga8_32</code> tool uses it for <code>make prog_w / vrf_w / refresh / fstatus</code>. It talks to the MachXO3D EFB through a wishbone window.</p>
+  <div class="card"><table>
+    <tr><th>Group</th><th>Functions</th></tr>
+    <tr><td>Low-level WB</td><td><code>write_wb</code>, <code>read_wb</code>, <code>wb_reset</code>, <code>WriteReg / ReadReg</code></td></tr>
+    <tr><td>EFB frames</td><td><code>wb_cnf_read</code>, <code>wb_cnf_write</code>, <code>wb_cnf_write_arr</code>, <code>wb_cfg_enable / disable / bypass</code>, <code>wb_cfg_get_status / get_busy</code>, <code>wb_wait_no_busy</code>, <code>wb_cfg_set_done</code></td></tr>
+    <tr><td>Device info</td><td><code>read_dev_id</code>, <code>check/print_dev_id</code>, <code>pages_in_dev</code>, <code>read_user_code_sram/flash</code>, <code>prog_user_code_flash</code>, <code>read_trace_id*</code>, <code>read_feature_row</code>, <code>read/print_feat_bits</code></td></tr>
+    <tr><td>Flash</td><td><code>wb_cfg_erase</code>, <code>set_address_fm</code>, <code>wb_cfg_write_page</code>, <code>wb_cfg_prog_flash</code>, <code>wb_cfg_flash_rd / prd</code>, <code>wb_cfg_refresh</code> <span class="tag warn">wipes all HBR/ADC config</span></td></tr>
+    <tr><td>Files</td><td><code>read_conf_file</code>, <code>read_conf_bin_file</code>, <code>write_conf_file</code>, <code>clip_conf_data</code>, <code>comp_cfg_data</code>, <code>read_imem_file</code></td></tr>
+    <tr><td>Design ID / CRC</td><td><code>get_version</code>, <code>get_svn_id/nr</code>, <code>get_compile_id</code>, <code>print_*_id</code>, <code>get/print_crc_sta</code>, <code>check_fpga_cnf</code>, <code>print_fstatus / lstatus</code></td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="addrmap">
+  <h2>4 · FPGA address map</h2>
+  <p class="lead">For <code>CPU_SW32</code> (the Makefile default), <code>BRIDGE_BASE_ADDR = 0x000000</code>. With <code>CPU_LM32</code>, add <code>0x800000</code> to every address. Addresses are word addresses.</p>
+  <div class="two">
+    <div class="card memmap">
+      <div class="addr">0x0100</div><div class="blk" style="background:var(--f-cfg)"><b>Config / CSR</b> <span>· 0x0101 CPU cmd · 0x0110 CRC, SVN, version</span></div>
+      <div class="addr">0x0400</div><div class="blk" style="background:var(--f-ads)"><b>ADS131M04 SPI master</b> <span>· 0x0400–0x041F</span></div>
+      <div class="addr">0x0480</div><div class="blk" style="background:var(--f-dac)"><b>I2C master</b> <span>· WDAT / CMD-STA / RDAT</span></div>
+      <div class="addr">0x0490</div><div class="blk" style="background:var(--f-dt)"><b>1-wire DS18B20</b> <span>· temps, cfg, presence, alarm</span></div>
+      <div class="addr">0x0800</div><div class="blk" style="background:var(--f-mem)"><b>Shared mem (SW32)</b> <span>· 0x0804/5 Pt100 · 0x0808/9 build stamp</span></div>
+      <div class="addr">0x2000</div><div class="blk" style="background:var(--f-hbr)"><b>H-bridge registers</b> <span>· 0x2000–0x200C</span></div>
+      <div class="addr">0x3000</div><div class="blk" style="background:var(--f-hbr)"><b>Seq RAM ch0 · ON table</b> <span>· 0x3000–0x33FF · 1024 × 18 bit</span></div>
+      <div class="addr">0x3400</div><div class="blk" style="background:var(--f-hbr)"><b>Seq RAM ch0 · OFF table</b> <span>· 0x3400–0x37FF · 1024 × 18 bit</span></div>
+      <div class="addr">0x3800</div><div class="blk" style="background:var(--f-hbr)"><b>Seq RAM ch1 · ON table</b> <span>· 0x3800–0x3BFF · 1024 × 18 bit</span></div>
+      <div class="addr">0x3C00</div><div class="blk" style="background:var(--f-hbr)"><b>Seq RAM ch1 · OFF table</b> <span>· 0x3C00–0x3FFF · 1024 × 18 bit</span></div>
+      <div class="addr">0x4000</div><div class="blk" style="background:var(--f-cfg)"><b>SW32 IMEM</b> <span>· 0x400 × 24 bit</span></div>
+      <div class="addr">0x6000</div><div class="blk" style="background:var(--f-uart)"><b>ADC capture buffer</b> <span>· 0x1FF7 × 16 bit</span></div>
+    </div>
+    <div class="card" style="margin-top:14px"><table>
+      <tr><th>Addr</th><th>H-bridge register</th></tr>
+      <tr><td><code>0x2000</code></td><td><b>HBR_CONF</b> (read) · 20 config bits</td></tr>
+      <tr><td><code>0x2001</code></td><td><b>HBR_CONF_BIT</b> (write) · <code>(bitpos&lt;&lt;4)|val</code> sets one field</td></tr>
+      <tr><td><code>0x2002</code></td><td><b>H_STAT</b> · b0 fault_n, b2/b3 busy ch0/ch1, b7..4 log2(RAM size) = 11, b9/b8 ctrl inputs, b19..16 limit switches</td></tr>
+      <tr><td><code>0x2003</code></td><td><b>PWM_FREQ_DIV</b> · code 0..7</td></tr>
+      <tr><td><code>0x2004/5</code></td><td><b>H_OUTP_1/2</b> · single-shot word, ch0/ch1</td></tr>
+      <tr><td><code>0x2007</code></td><td><b>START_ON_OFF</b> · triggers, SM reset, store, ADC mask</td></tr>
+      <tr><td><code>0x2008/9</code></td><td><b>SEQ range ch0</b> ON / OFF · <code>(len−1)&lt;&lt;16 | start</code></td></tr>
+      <tr><td><code>0x200A/B</code></td><td><b>SEQ range ch1</b> ON / OFF</td></tr>
+      <tr><td><code>0x200C</code></td><td><b>SEQ_STATUS</b> · pointer + FSM states <span class="tag warn">never read</span></td></tr>
+    </table></div>
+  </div>
+
+  <h3>Sequence RAM layout and range registers</h3>
+  <div class="card">
+    <p style="margin-top:0">Each channel has a 2048-entry RAM (log2 = 11, reported in <code>H_STAT</code> bits 7..4). The C code divides it into two fixed halves. The range registers give the start address inside that channel's RAM (11 bits, 0..2047) and length−1 (11 bits, in bits 26..16).</p>
+    <table>
+      <tr><th>Channel</th><th>Table</th><th>Bus addresses</th><th>RAM offset</th><th>Range register</th><th>Written by</th><th>Played by</th></tr>
+      <tr><td>ch0</td><td>ON (open, "rising edge")</td><td><code>0x3000–0x33FF</code></td><td>0–1023</td><td><code>0x2008</code> = (len−1)&lt;&lt;16 | 0</td><td><code>--load_table 0 1</code></td><td><code>--start 1 1 x</code>, AFBR/OCPL ch0 ↑</td></tr>
+      <tr><td>ch0</td><td>OFF (close, "falling edge")</td><td><code>0x3400–0x37FF</code></td><td>1024–2047</td><td><code>0x2009</code> = (len−1)&lt;&lt;16 | 1024</td><td><code>--load_table 0 0</code></td><td><code>--start 1 0 x</code>, AFBR/OCPL ch0 ↓</td></tr>
+      <tr><td>ch1</td><td>ON</td><td><code>0x3800–0x3BFF</code></td><td>0–1023</td><td><code>0x200A</code> = (len−1)&lt;&lt;16 | 0</td><td><code>--load_table 1 1</code></td><td><code>--start 2 x 1</code>, AFBR/OCPL ch1 ↑</td></tr>
+      <tr><td>ch1</td><td>OFF</td><td><code>0x3C00–0x3FFF</code></td><td>1024–2047</td><td><code>0x200B</code> = (len−1)&lt;&lt;16 | 1024</td><td><code>--load_table 1 0</code></td><td><code>--start 2 x 0</code>, AFBR/OCPL ch1 ↓</td></tr>
+    </table>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:0">Range address = <code>0x2008 + 2·ch + seq</code>, where seq 0 = ON and seq 1 = OFF (<code>hbr_seq_table_range</code>). The hardware only uses the start and length you write, so the half-split is a convention of <code>hbr_upload_seq_table</code>, not something the FPGA enforces.</p>
+  </div>
+
+  <h3 id="bitfields">Bit fields</h3>
+  <div class="card">
+    <b>HBR_CONF</b> <span class="mono" style="color:var(--muted)">0x2000 · written one field at a time via 0x2001</span>
+    <div class="bits" style="grid-template-columns: repeat(20, minmax(0,1fr))">
+      <div class="cell num">19</div><div class="cell num">18</div><div class="cell num">17</div><div class="cell num">16</div><div class="cell num">15</div><div class="cell num">14</div><div class="cell num">13</div><div class="cell num">12</div><div class="cell num">11</div><div class="cell num">10</div><div class="cell num">9</div><div class="cell num">8</div><div class="cell num">7</div><div class="cell num">6</div><div class="cell num">5</div><div class="cell num">4</div><div class="cell num">3</div><div class="cell num">2</div><div class="cell num">1</div><div class="cell num">0</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-hbr)" title="preserve last PWM state after sequence, ch1/ch0">preserve last</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-dt)" title="short coil when not driven">slow decay SM</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-dac)">inv AFBR</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-dac)">inv OCPL</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-ads)">ena AFBR</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-ads)">ena OCPL</div>
+      <div class="cell" style="background:var(--warn-soft)">SLEEP_n</div>
+      <div class="cell" style="background:var(--f-cfg)">OCPM</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-uart)">MODE2|1</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-mem)">DECAY</div>
+      <div class="cell" style="grid-column: span 2; background:var(--f-mem)">TOFF</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:4px 0 18px">Each 2-bit per-channel field holds ch1 in the high bit and ch0 in the low bit. SLEEP_n = 0 turns all outputs off, which also clears a fault. DECAY: 0 slow, 1 smart, 2/3 mixed. TOFF: 7/16/24/32 µs.</p>
+
+    <b>Sequence RAM word / single-shot word</b> <span class="mono" style="color:var(--muted)">18 bit · 0x3000/0x3800, 0x2004/5</span>
+    <div class="bits" style="grid-template-columns: 2fr 8fr 8fr">
+      <div class="cell num">17..16</div><div class="cell num">15..8</div><div class="cell num">7..0</div>
+      <div class="cell" style="background:var(--f-hbr)">state: 0 off · 1 fwd · 2 rev · 3 brake</div>
+      <div class="cell" style="background:var(--f-uart)">repeat count − 1 (PWM periods, 1..256)</div>
+      <div class="cell" style="background:var(--f-ads)">power 0..255</div>
+    </div>
+
+    <b style="display:block;margin-top:18px">START_ON_OFF</b> <span class="mono" style="color:var(--muted)">0x2007 · self-clearing trigger bits</span>
+    <div class="bits" style="grid-template-columns: 8fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr">
+      <div class="cell num">15..8</div><div class="cell num">7</div><div class="cell num">6</div><div class="cell num">5</div><div class="cell num">4</div><div class="cell num">3</div><div class="cell num">2</div><div class="cell num">1</div><div class="cell num">0</div>
+      <div class="cell" style="background:var(--f-ads)">ADC channel mask to store (ch0 → 0x07, ch1 → 0x70)</div>
+      <div class="cell" style="background:var(--f-uart)">store 1</div><div class="cell" style="background:var(--f-uart)">store 0</div>
+      <div class="cell" style="background:var(--warn-soft)">rst 1</div><div class="cell" style="background:var(--warn-soft)">rst 0</div>
+      <div class="cell" style="background:var(--f-dac)">OFF 1</div><div class="cell" style="background:var(--f-dac)">OFF 0</div>
+      <div class="cell" style="background:var(--f-hbr)">ON 1</div><div class="cell" style="background:var(--f-hbr)">ON 0</div>
+    </div>
+
+    <b style="display:block;margin-top:18px">PWM frequency codes</b> <span class="mono" style="color:var(--muted)">0x2003</span>
+    <div class="bits" style="grid-template-columns: repeat(8, 1fr)">
+      <div class="cell num">0</div><div class="cell num">1</div><div class="cell num">2</div><div class="cell num">3</div><div class="cell num">4</div><div class="cell num">5</div><div class="cell num">6</div><div class="cell num">7</div>
+      <div class="cell">4000</div><div class="cell">6400</div><div class="cell">8000</div><div class="cell">12800</div><div class="cell">16000</div><div class="cell" style="background:var(--f-hbr)">25600 ★</div><div class="cell">32000</div><div class="cell">64000 Hz</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:4px 0 0">★ used by the current scripts. <code>set_pwm_freq</code> rounds a requested Hz <b>down</b> to the nearest available frequency.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="classes">
+  <h2>5 · Functions by class</h2>
+  <p class="lead">Every function, and the bus traffic it produces. W1–W4 / R1–R4 are 1–4 byte register writes/reads. SB/RB are burst send/receive. Offsets in the ADC, DAC, and dtemp tables are relative to that class's base address.</p>
+  <div class="legend"><span><span class="tag hw">HW</span> touches the bus</span><span><span class="tag pure">pure</span> computation only</span><span><span class="tag warn">!</span> issue, see §9</span></div>
+  <input class="search" id="fnSearch" placeholder="Filter functions across all class tables… (e.g. seq, 0x2007, SendBurst24)">
+
+  <h3 id="c_hbr">C_hbr · <span style="font-weight:400;color:var(--muted)">C_hbr.h / C_hbr.cpp</span></h3>
+  <div class="card"><table class="fn">
+    <tr><th>Function</th><th>Purpose</th><th>UART32 traffic</th></tr>
+    <tr><td><code>C_hbr(debug, uart32*)</code></td><td>Stores the pointer. <code>last_pwm_freq</code> = −1 (unknown).</td><td>—</td></tr>
+    <tr><td><code>WriteReg / ReadReg(len, addr)</code></td><td>Dispatch on length 1..4.</td><td class="bus">W1–W4 / R1–R4</td></tr>
+    <tr><td><code>send_cmd(cmd)</code> <span class="tag hw">HW</span></td><td>CPU off/reset command.</td><td class="bus">W1 0x0101</td></tr>
+    <tr><td><code>get_cpu_prog_timestamp()</code> <span class="tag hw">HW</span></td><td>SW32 firmware build date and time.</td><td class="bus">R4 0x0808, R4 0x0809</td></tr>
+    <tr><td><code>read_imem_file()</code> <span class="tag pure">pure</span></td><td>Parses a hex IMEM file.</td><td>—</td></tr>
+    <tr><td><code>set_sh_mem(n, addr, u8/u16/u32*)</code> <span class="tag hw">HW</span></td><td>Chunked burst write (≤1024 words per packet).</td><td class="bus">SB 8/16/32</td></tr>
+    <tr><td><code>set_sh_mem24()</code> <span class="tag hw">HW</span></td><td>Chunked 24-bit burst write.</td><td class="bus">SendBurst24</td></tr>
+    <tr><td><code>get_sh_mem(n, addr, u8/u16/u32*)</code> <span class="tag hw">HW</span></td><td>Chunked burst read.</td><td class="bus">RB 8/16/32</td></tr>
+    <tr><td><code>get_sh_mem24()</code> <span class="tag hw">HW</span></td><td>Chunked 24-bit read.</td><td class="bus">RecvBurst24</td></tr>
+    <tr><td><code>set_hbr_conf_decay(code)</code> <span class="tag hw">HW</span></td><td>DECAY field.</td><td class="bus">W2 0x2001 (+R2 0x2000 dbg)</td></tr>
+    <tr><td><code>set_hbr_conf_toff(code)</code> <span class="tag hw">HW</span></td><td>TOFF field.</td><td class="bus">W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_conf_mode(m1, m2)</code> <span class="tag hw">HW</span></td><td>MODE1/2 pins.</td><td class="bus">W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_conf_ocpm(v)</code> <span class="tag hw">HW</span></td><td>OCPM pin.</td><td class="bus">W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_conf_sleep_n(v)</code> <span class="tag hw">HW</span></td><td>Enables the bridges (0 = off, also clears a fault).</td><td class="bus">W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_conf_ena_inv_afbr(ch, ena, inv)</code> <span class="tag hw">HW</span></td><td>AFBR external trigger input.</td><td class="bus">2× W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_conf_ena_inv_ocpl(ch, ena, inv)</code> <span class="tag hw">HW</span></td><td>OCPL external trigger input.</td><td class="bus">2× W2 0x2001</td></tr>
+    <tr><td><code>set_hbr_sm_slow_decay(mask, v)</code> <span class="tag hw">HW</span></td><td>Shorts the coil when not driven.</td><td class="bus">W2 0x2001 per ch</td></tr>
+    <tr><td><code>set_preserve_last(mask, v)</code> <span class="tag hw">HW</span></td><td>Holds the last table state after the sequence ends.</td><td class="bus">W2 0x2001 per ch</td></tr>
+    <tr><td><code>get_hbr_conf(dbg)</code> <span class="tag hw">HW</span></td><td>Reads the config (and status when dbg).</td><td class="bus">R3 0x2000 (+R3 0x2002)</td></tr>
+    <tr><td><code>set_pwm_freq(f | code)</code> <span class="tag hw">HW</span></td><td>Sets the PWM frequency and caches <code>last_pwm_freq</code>.</td><td class="bus">W1 0x2003</td></tr>
+    <tr><td><code>hbr_rep_pwm()</code> <span class="tag hw">HW</span></td><td>Reads back the PWM code and refreshes the cache.</td><td class="bus">R1 0x2003</td></tr>
+    <tr><td><code>single_shot(ch, st, dur, pwr)</code> <span class="tag hw">HW</span></td><td>Drives one bridge for 1..256 PWM periods.</td><td class="bus">W3 0x2004+ch</td></tr>
+    <tr><td><code>hbr_seq_start(mask, on1, on2)</code> <span class="tag hw">HW</span> <span class="tag warn">!</span></td><td>Triggers ON (1) or OFF (0) on the channels in the mask, arms the ADC store, and polls until the store bits clear.</td><td class="bus">W2 0x2007; ≤100× R2 0x2007</td></tr>
+    <tr><td><code>hbr_seq_reset(mask)</code> <span class="tag hw">HW</span></td><td>Forces the sequencer FSM to idle.</td><td class="bus">W1 0x2007 = mask&lt;&lt;4</td></tr>
+    <tr><td><code>hbr_seq_table_range(ch, seq, beg, len)</code> <span class="tag hw">HW</span></td><td>Sets where the ON (seq 0) or OFF (seq 1) table sits in the channel RAM.</td><td class="bus">W4 0x2008+2ch+seq</td></tr>
+    <tr><td><code>hbr_rep_seq_table()</code> <span class="tag hw">HW</span></td><td>Prints the 4 table ranges.</td><td class="bus">RB 4×32 @0x2008</td></tr>
+    <tr><td><code>read_power_profile()</code> <span class="tag pure">pure</span></td><td>Parses a PWL file (<code>time_ms power_%</code>).</td><td>—</td></tr>
+    <tr><td><code>resample_power_profile()</code> <span class="tag warn">!</span></td><td>Linear interpolation at PWM-period centres → −255..255. Writes <code>res_wave.dat</code>. Reads the PWM frequency from hardware if it is unknown.</td><td class="bus">maybe R1 0x2003</td></tr>
+    <tr><td><code>compress_power_profile()</code> <span class="tag pure">pure</span></td><td>Run-length encoding into sequence words. The sign selects state 1/2.</td><td>—</td></tr>
+    <tr><td><code>hbr_create_seq_table(…)</code> <span class="tag pure">pure</span></td><td>Legacy parametric trapezoid generator.</td><td>—</td></tr>
+    <tr><td><code>hbr_upload_seq_table(ch, re, len, tbl)</code> <span class="tag hw">HW</span></td><td>re=1 → ON table at offset 0; re=0 → OFF table at offset 1024 (ch0: 0x3000 / 0x3400, ch1: 0x3800 / 0x3C00). Sets the range, then uploads the table. Each half holds 1024 entries. A table longer than that runs into the other half, and the code only prints a warning.</td><td class="bus">W4 range; SendBurst24 → 0x3000/0x3800</td></tr>
+    <tr><td><code>read_temper()</code> <span class="tag hw">HW</span></td><td>Converts the 2 Pt100 codes to Ω and °C.</td><td class="bus">R2 0x0804, R2 0x0805</td></tr>
+    <tr><td><code>read_adc_buffer(fout)</code> <span class="tag hw">HW</span> <span class="tag warn">!</span></td><td>Reads the mask and the buffer, scales each channel to V, A, A, or Ω, and writes a text table. Closes <code>fout</code>.</td><td class="bus">R2 0x2007; RB16 8183 words @0x6000</td></tr>
+  </table></div>
+
+  <h3 id="c_ads">C_ads131m04 · <span style="font-weight:400;color:var(--muted)">base 0x0400</span></h3>
+  <div class="callout info">The class keeps an offline register model <code>reg_data[chip][30]</code> with change flags. The <code>set_*</code> and <code>prepare_*</code> functions edit only the model, and the <code>hw_*</code> functions push it to the chips. SPI-master offsets: +0 CMD_WR, +1 WREG, +2 CRC_WR, +3 AUTO_READ, +4 ADC_MSK, +5 CMD/STA_SM, +6/7 period/freq meters, +8/9 responses, +16..23 ADC samples.</div>
+  <div class="card"><table class="fn">
+    <tr><th>Function</th><th>Purpose</th><th>UART32 traffic</th></tr>
+    <tr><td><code>C_ads131m04(uart32*, base, init)</code></td><td>Loads reset values and clears offsets.</td><td>—</td></tr>
+    <tr><td><code>load_reset, cp_bit_slice</code> <span class="tag pure">pure</span></td><td>Loads power-up values into the model; inserts a bit field.</td><td>—</td></tr>
+    <tr><td><code>set_osr, set_gc, set_pwr</code> <span class="tag pure">pure</span></td><td>CLOCK and CFG fields per chip.</td><td>—</td></tr>
+    <tr><td><code>set_rx_crc, set_16_24b</code> <span class="tag pure">pure</span></td><td>MODE register fields.</td><td>—</td></tr>
+    <tr><td><code>channel2chip, channel2chip_ch</code> <span class="tag pure">pure</span></td><td>PCB channel ↔ chip/internal channel (reversed 3..0 order).</td><td>—</td></tr>
+    <tr><td><code>set_adc_ena, set_pga, set_inp_mux</code> <span class="tag pure">pure</span></td><td>Per-channel enable, gain, input mux.</td><td>—</td></tr>
+    <tr><td><code>set_offs_cal, set_gain_cal</code> <span class="tag pure">pure</span></td><td>OCAL / GCAL registers.</td><td>—</td></tr>
+    <tr><td><code>set_dc_block_ch, set_dc_block_flt</code> <span class="tag pure">pure</span></td><td>DC block settings.</td><td>—</td></tr>
+    <tr><td><code>osr_to_sampling_rate, sampling_rate_to_osr, gain_to_gain_code</code> <span class="tag pure">pure</span></td><td>Conversions using the sampling-rate table.</td><td>—</td></tr>
+    <tr><td><code>prepare_all_regs(…)</code> <span class="tag pure">pure</span> <span class="tag warn">!</span></td><td>Builds the full config. The header and definition list the parameters in different orders.</td><td>—</td></tr>
+    <tr><td><code>load_adc_backgr, clear_adc_backgr</code> <span class="tag pure">pure</span></td><td>Offset-calibration store.</td><td>—</td></tr>
+    <tr><td><code>print_table, print_offs_cal</code> <span class="tag pure">pure</span> <span class="tag warn">!</span></td><td>Diff and dump tables. print_offs_cal loops over 3 chips.</td><td>—</td></tr>
+    <tr><td><code>hw_sm_cmd(bits, wait, mask)</code> <span class="tag hw">HW</span></td><td>Command to the SPI state machine.</td><td class="bus">WriteAuto +5</td></tr>
+    <tr><td><code>hw_wt_spi_rdy(flags, timeout)</code> <span class="tag hw">HW</span></td><td>Polls the status until the flags clear.</td><td class="bus">≤1000× R4 +5; R4 +2</td></tr>
+    <tr><td><code>hw_adc_reset, hw_adc_sync</code> <span class="tag hw">HW</span> <span class="tag warn">!</span></td><td>RESET/SYNC pulse on SYNC_N.</td><td class="bus">via hw_sm_cmd</td></tr>
+    <tr><td><code>hw_spi_reset, hw_spi_clr_new_sample</code> <span class="tag hw">HW</span></td><td>SPI master reset; clears the new-sample flag.</td><td class="bus">via hw_sm_cmd</td></tr>
+    <tr><td><code>hw_auto_read(auto, crc, sync, d16, clr, mask)</code> <span class="tag hw">HW</span></td><td>Streaming mode on/off.</td><td class="bus">W4 +3</td></tr>
+    <tr><td><code>hw_chip_mask(mask, drdy_sel)</code> <span class="tag hw">HW</span></td><td>Chip mask and DRDY debug select.</td><td class="bus">W1 +4, R1 +4</td></tr>
+    <tr><td><code>hw_chip_mask(mask)</code> <span class="tag hw">HW</span></td><td>Mask only.</td><td class="bus">W4 +0</td></tr>
+    <tr><td><code>hw_send_cmd(cmd, mask)</code> <span class="tag hw">HW</span></td><td>STANDBY, WAKEUP, etc.</td><td class="bus">wait; W4 +0</td></tr>
+    <tr><td><code>hw_wr_reg(addr, data, mask)</code> <span class="tag hw">HW</span></td><td>WREG.</td><td class="bus">wait; SB 2×32 +0</td></tr>
+    <tr><td><code>hw_rd_reg(addr, out, mask, dual)</code> <span class="tag hw">HW</span></td><td>RREG (pipelined: the reply arrives one frame later).</td><td class="bus">SB 1×32 +0; wait; RB 2×32 +8</td></tr>
+    <tr><td><code>hw_rd_reg_single</code> <span class="tag hw">HW</span></td><td>Single RREG.</td><td class="bus">W4 +0; wait; RB 2×32 +8</td></tr>
+    <tr><td><code>hw_rd_adc(int32[8])</code> <span class="tag hw">HW</span></td><td>One sample from all 8 channels.</td><td class="bus">wait; W1 +16; RB 8×32 +16</td></tr>
+    <tr><td><code>hw_get_freq_per, hw_get_per</code> <span class="tag hw">HW</span></td><td>DRDY period and frequency meters.</td><td class="bus">W1 +6; poll; RB/R4 +6</td></tr>
+    <tr><td><code>hw_rd_all_regs(mask, safe)</code> <span class="tag hw">HW</span> <span class="tag warn">!</span></td><td>Reads all 30 registers into <code>reg_data_rd</code>. Out-of-bounds read at rg=29.</td><td class="bus">30–31× hw_rd_reg</td></tr>
+    <tr><td><code>hw_wr_all_regs(status, mask)</code> <span class="tag hw">HW</span> <span class="tag warn">!</span></td><td>Writes the flagged registers (broadcast when identical across chips). The response check only covers the last register.</td><td class="bus">hw_wr_reg + RB +8 per reg</td></tr>
+    <tr><td><code>hw_update_all_regs()</code> <span class="tag hw">HW</span></td><td><code>hw_wr_all_regs(REG_CHANGED)</code></td><td class="bus">—</td></tr>
+  </table></div>
+
+  <h3 id="c_dac">C_dual_dac · <span style="font-weight:400;color:var(--muted)">base 0x0480 · MCP47FEB @ 0xC0 · DAC0 ↔ bridge ch1 (swapped)</span></h3>
+  <div class="card"><table class="fn">
+    <tr><th>Function</th><th>Purpose</th><th>UART32 traffic</th></tr>
+    <tr><td><code>i2c_reset()</code> <span class="tag hw">HW</span></td><td>Resets the I2C master.</td><td class="bus">W4 +1 = 1&lt;&lt;16</td></tr>
+    <tr><td><code>i2c_write(slv, n, data)</code> <span class="tag hw">HW</span></td><td>Starts a write of 1..4 bytes.</td><td class="bus">SB 2×32 +0</td></tr>
+    <tr><td><code>i2c_read(slv, n)</code> <span class="tag hw">HW</span></td><td>Starts a read.</td><td class="bus">W4 +1</td></tr>
+    <tr><td><code>i2c_write_read(slv, nw, data, nr)</code> <span class="tag hw">HW</span></td><td>Write, repeated start, read.</td><td class="bus">SB 2×32 +0</td></tr>
+    <tr><td><code>i2c_wait_rdy()</code> <span class="tag hw">HW</span></td><td>Polls until idle and latches the timeout bit.</td><td class="bus">≤100× R4 +1</td></tr>
+    <tr><td><code>i2c_get_rdata()</code> <span class="tag hw">HW</span></td><td>Returns the last read data.</td><td class="bus">RB 2×32 +2</td></tr>
+    <tr><td><code>i2c_read_dac_rg / i2c_write_dac_rg</code> <span class="tag hw">HW</span></td><td>DAC register access (20 ms extra wait for EEPROM writes).</td><td class="bus">compositions of the above</td></tr>
+    <tr><td><code>dac_ref, dac_to_v, v_to_dac</code> <span class="tag pure">pure</span></td><td>12-bit code ↔ volts.</td><td>—</td></tr>
+    <tr><td><code>init_dac_ref(ref, eep)</code> <span class="tag hw">HW</span></td><td>VREF source for both DACs.</td><td class="bus">DAC reg 0x08 [+0x10]</td></tr>
+    <tr><td><code>set_dac / set_dac_volt(ch, …)</code> <span class="tag hw">HW</span></td><td>Sets the bridge VREF, which is the current limit.</td><td class="bus">DAC reg 0x00/0x01 [+0x10]</td></tr>
+    <tr><td><code>get_dacs()</code> <span class="tag hw">HW</span></td><td>Reads both codes.</td><td class="bus">2–3× i2c_read_dac_rg</td></tr>
+    <tr><td><code>WriteReg / ReadReg, last_i2c_timeout</code></td><td>Base-relative register access; timeout flag.</td><td class="bus">W*/R*</td></tr>
+  </table></div>
+
+  <h3 id="c_dtemp">C_dtemp · <span style="font-weight:400;color:var(--muted)">base 0x0490</span> &nbsp;and&nbsp; C_simpl_stat</h3>
+  <div class="card"><table class="fn">
+    <tr><th>Function</th><th>Purpose</th><th>UART32 traffic</th></tr>
+    <tr><td><code>get_presence_mask()</code> <span class="tag hw">HW</span></td><td>Sensors found and the count the design expects.</td><td class="bus">R2 +9</td></tr>
+    <tr><td><code>get_threshold / get_threshold_C</code> <span class="tag hw">HW</span></td><td>Alarm threshold (sign-magnitude).</td><td class="bus">R2 +10</td></tr>
+    <tr><td><code>set_threshold(int16 | °C)</code> <span class="tag hw">HW</span></td><td>—</td><td class="bus">W2 +10, R2 +10</td></tr>
+    <tr><td><code>set_res_auto / set_res_trigg</code> <span class="tag hw">HW</span></td><td>Resolution plus auto or single conversion.</td><td class="bus">W1 +8</td></tr>
+    <tr><td><code>get_alarm_mask()</code> <span class="tag hw">HW</span></td><td>Latched and current alarm.</td><td class="bus">R4 +11</td></tr>
+    <tr><td><code>get_temp(out, n)</code> <span class="tag hw">HW</span></td><td>Temperatures, /16 °C, sign-magnitude.</td><td class="bus">RB n×16 +0</td></tr>
+    <tr><td><code>rep_temp()</code> <span class="tag hw">HW</span></td><td>Top and bottom of the bridge.</td><td class="bus">RB 2×16 +0</td></tr>
+    <tr><td><code>C_simpl_stat: init, add, get_npoints/min/max/mean/rms</code> <span class="tag pure">pure</span></td><td>Running statistics for <code>--adc_rd</code>.</td><td>—</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="cli">
+  <h2>6 · hbr CLI dispatch</h2>
+  <p class="lead">Pass 1 reads <code>--dev --port --br --nll --id</code>, opens the port, and builds the classes. Pass 2 executes the other options <b>in command-line order</b>. Nothing survives between invocations except the FPGA registers.</p>
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  A["argv pass 1<br/>--dev --port --br --nll --id"] --> B["new uart32<br/>slave=ID, 32-bit, 24-bit addr"]
+  B --> C["setserial low_latency<br/>(ttyUSB only)"]
+  C --> D["new C_hbr, C_ads131m04 0x0400,<br/>C_dtemp 0x0490, C_dual_dac 0x0480"]
+  D --> E["argv pass 2<br/>execute options in order"]
+  E --> F["process-local state:<br/>tbl_data, chip_mask, chip_sel,<br/>ads_16bit_data, dac_write2eep"]
+  </pre></div>
+  <div class="card"><table class="fn">
+    <tr><th>Option</th><th>Calls</th></tr>
+    <tr><td><code>--status</code></td><td>get_cpu_prog_timestamp, read_temper, dtemp.get_presence_mask, dtemp.rep_temp</td></tr>
+    <tr><td><code>--hbr_decay / _toff / _ocpm / _sleep_n</code></td><td>set_hbr_conf_*</td></tr>
+    <tr><td><code>--ctrl_in_afbr|ocpl ch ena inv</code></td><td>set_hbr_conf_ena_inv_afbr / ocpl</td></tr>
+    <tr><td><code>--set_preserve_last / --set_slow_dec_sm</code></td><td>set_preserve_last / set_hbr_sm_slow_decay</td></tr>
+    <tr><td><code>--hbr_mode12 m1 m2</code></td><td>sleep_n(0), set_hbr_conf_mode, sleep 1 s</td></tr>
+    <tr><td><code>--set_pwm f</code></td><td>set_pwm_freq</td></tr>
+    <tr><td><code>--hbr_rep</code></td><td>get_hbr_conf, hbr_rep_pwm, hbr_rep_seq_table, dac.get_dacs</td></tr>
+    <tr><td><code>--single ch st dur pwr</code></td><td>single_shot</td></tr>
+    <tr><td><code>--start mask on1 on2</code></td><td>hbr_seq_start</td></tr>
+    <tr><td><code>--sm_reset mask</code></td><td>hbr_seq_reset</td></tr>
+    <tr><td><code>--create_table …</code></td><td>hbr_create_seq_table → tbl_data</td></tr>
+    <tr><td><code>--read_table f tstep tscale pscale</code></td><td>read_power_profile → resample_power_profile → compress_power_profile → tbl_data</td></tr>
+    <tr><td><code>--load_table ch re</code></td><td>hbr_upload_seq_table</td></tr>
+    <tr><td><code>--export_table f</code></td><td>writes tbl_data as hex (no hardware access)</td></tr>
+    <tr><td><code>--adc_conf sr gc mux shr</code></td><td>full ADC (re)configuration, see §7</td></tr>
+    <tr><td><code>--adc_rd_all_reg …</code></td><td>prepare_all_regs, spi_reset, auto_read 0, STANDBY, rd_all_regs, WAKEUP, print_table</td></tr>
+    <tr><td><code>--adc_reset / _sync / _spi_reset</code></td><td>hw_adc_reset / hw_adc_sync / hw_spi_reset</td></tr>
+    <tr><td><code>--adc_16 v</code>, <code>--adc_auto_read a c s</code></td><td>[set_16_24b(0) + hw_update_all_regs], hw_auto_read</td></tr>
+    <tr><td><code>--adc_chip_mask m sel</code></td><td>hw_chip_mask</td></tr>
+    <tr><td><code>--adc_get_freq_per / --adc_get_per</code></td><td>hw_get_freq_per / hw_get_per <span class="tag warn">chip_sel may be uninitialised</span></td></tr>
+    <tr><td><code>--adc_wreg a d / --adc_standby / --adc_wakeup</code></td><td>hw_wr_reg / hw_send_cmd</td></tr>
+    <tr><td><code>--adc_rd N</code></td><td>(N+2)× hw_rd_adc, C_simpl_stat per channel</td></tr>
+    <tr><td><code>--get_adc_buff f</code></td><td>read_adc_buffer</td></tr>
+    <tr><td><code>--dac_write2eep / --init_hbr_vref / --set_hbr_vref ch V</code></td><td>flag / init_dac_ref / set_dac_volt</td></tr>
+    <tr><td><code>--rd_reg len addr</code></td><td>uart32::Read* directly</td></tr>
+    <tr><td><code>--cpu_off / --cpu_rst / --wr_imem f</code></td><td>send_cmd; read_imem_file + set_sh_mem(0x4000)</td></tr>
+    <tr><td><code>--break / --pingc / --pinga</code></td><td>uart32::SendBreak / WriteSingleByte</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="flows">
+  <h2>7 · Operational flows</h2>
+  <p class="lead">The sequences the scripts and Makefile actually run today. These will become controller logic in NOMAD.</p>
+
+  <h3 id="flow-bringup">Bring-up after power-on or FPGA refresh · <span style="font-weight:400;color:var(--muted)">initialize_fpga.sh</span></h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant S as initialize_fpga.sh
+  participant H as C_hbr
+  participant A as C_ads131m04
+  participant F as uart32 → FPGA
+  S->>H: set_pwm_freq(25600)
+  H->>F: W1 0x2003 = 5
+  S->>H: ctrl_in_afbr ch0/ch1, ctrl_in_ocpl ch0/ch1
+  H->>F: 8× W2 0x2001
+  S->>H: decay 2, toff 0, slow_decay 3 0, preserve_last 3 0, sleep_n 1
+  H->>F: 7× W2 0x2001 (+ read-backs)
+  S->>H: hbr_seq_reset(3)
+  H->>F: W1 0x2007 = 0x30
+  S->>A: hw_chip_mask(3,0), hw_auto_read(0,1,0)
+  A->>F: W1 0x0404, W4 0x0403
+  Note over S,F: sleep 1 s, new hbr process
+  S->>A: --adc_conf 64000 0 0 0
+  A->>F: reset, STANDBY, write + verify 30 regs × 2 chips, WAKEUP
+  S->>A: set_16_24b(0) + hw_update_all_regs, hw_auto_read(1,1,1,16-bit)
+  A->>F: W4 0x0403 → ADCs now stream into FPGA
+  S->>A: hw_get_freq_per
+  S->>H: --hbr_rep --status
+  </pre></div>
+
+  <h3 id="flow-table">Waveform file → sequence table</h3>
+  <div class="card"><pre class="mermaid">
+flowchart LR
+  P["open.dat / close.dat<br/>PWL: time_ms power_%<br/>(gen_open_close_table.py)"] --> R["read_power_profile<br/>parse + validate"]
+  R --> RS["resample_power_profile<br/>1 sample per PWM period<br/>−255..255"]
+  PWM[("last_pwm_freq<br/>or R1 0x2003")] -.-> RS
+  RS --> C["compress_power_profile<br/>run-length encoding<br/>sign → state 1/2"]
+  C --> T["tbl_data[≤2048]<br/>18-bit words"]
+  T --> U["hbr_upload_seq_table(ch, re)"]
+  U --> W1["W4 0x2008 + 2ch + seq<br/>range"]
+  U --> W2["SendBurst24 →<br/>ch0: ON 0x3000, OFF 0x3400<br/>ch1: ON 0x3800, OFF 0x3C00"]
+  RS -. debug .-> D["res_wave.dat"]
+  style W1 fill:#fde2cf,stroke:#d0782f
+  style W2 fill:#fde2cf,stroke:#d0782f
+  </pre></div>
+
+  <h3 id="flow-move">Open / close shutter + ADC capture · <span style="font-weight:400;color:var(--muted)">open_shutter.sh / close_shutter.sh</span></h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant S as open_shutter.sh
+  participant O as overheat_check.sh
+  participant H as C_hbr
+  participant F as FPGA (ch1)
+  S->>O: check_overheat (bench CSV log, not the board)
+  alt overheated
+    S->>H: set_preserve_last(3,0)
+    Note over S: exit 1
+  end
+  S->>H: set_pwm_freq(25600)
+  H->>F: W1 0x2003
+  S->>H: read_table open.dat → load_table(ch=1, re=1)
+  H->>F: W4 0x200A (ch1 ON range)
+  H->>F: SendBurst24 → 0x3800…
+  S->>H: set_preserve_last(3,1)
+  H->>F: 2× W2 0x2001
+  S->>H: hbr_seq_start(mask=2, _, on=1)
+  H->>F: W2 0x2007 = ON1 | STORE1 | ADCmask 0x70
+  loop until store bits clear (≤100)
+    H->>F: R2 0x2007
+  end
+  Note over F: sequencer plays table, holds last state,<br/>ADC samples → 0x6000
+  opt analysis
+    S->>H: read_adc_buffer
+    H->>F: R2 0x2007, RecvBurst16 8183 words @0x6000
+  end
+  Note over S,F: close = load_table(1, 0) → OFF range 0x200B (start 1024), table @0x3C00, start 2 0 0
+  </pre></div>
+  <div class="callout"><b>Dropped triggers:</b> the FPGA ignores a trigger while the channel's sequencer is busy, and nothing reports it. See <a href="#dropped">Dropped triggers</a> below for when this happens and how to avoid it.<br>
+  <b>Channel naming:</b> <code>--load_table/--single/--ctrl_in_*</code> use ch 0/1. <code>--start/--sm_reset</code> use a mask (2 = ch1), but their log text says "ch 1/2".</div>
+
+  <h3 id="dropped">Dropped triggers: what they are and when they happen</h3>
+  <p>Each channel has its own sequencer state machine, <code>hbr_sm</code> in <code>SRC/SHUTTER/hbr_sm.vhd</code>. An ON or OFF trigger reaches it as a <b>pulse one FPGA clock long</b> (about 30 ns). The pulse comes from one of two places:</p>
+  <ul>
+    <li><b>Software:</b> a write to <code>0x2007</code> (<code>hbr --start</code>). <code>hbr_dec_cnf.vhd</code> turns bit 0/1 into <code>start_on</code> and bit 2/3 into <code>start_off</code> for exactly one clock.</li>
+    <li><b>Hardware inputs</b> AFBR and OCPL, if enabled. After a glitch filter a few clocks long and the optional inversion (<code>filt_long</code>), a <b>rising edge becomes ON</b> and a <b>falling edge becomes OFF</b> (<code>hbr_gen.vhd:346-347</code>).</li>
+  </ul>
+  <p>The state machine only looks at <code>ctrl_on</code>/<code>ctrl_off</code> while it is in <code>sm_idle</code>, and only during that one clock. The trigger is not latched or queued, and no error bit is set. If the machine is not ready in that clock, the trigger is simply lost.</p>
+
+  <div class="card"><pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> idle
+  idle --> seq_start: ON pulse and len_on ≠ 0
+  idle --> seq_start: OFF pulse and len_off ≠ 0
+  idle --> man_start: single-shot write (0x2004/5)
+  seq_start --> seq_read: 1 clk
+  seq_read --> seq_next: latch entry (state, dur, power)
+  seq_next --> seq_next: each PWM tick while count ≠ 0
+  seq_next --> seq_read: count = 0, more entries
+  seq_next --> idle: count = 0, last entry
+  man_start --> idle: after dur PWM periods
+  idle --> idle: busy = 0 · the ONLY state that accepts triggers
+  note right of seq_next
+    busy = 1 in every state except idle.
+    Any ON or OFF pulse that arrives here is lost.
+  end note
+  </pre></div>
+  <p style="font-size:13.5px;color:var(--muted)">An <code>sm_reset</code> (bits 4/5 of <code>0x2007</code>) forces any state back to <code>idle</code> immediately and switches the outputs to Hi-Z.</p>
+
+  <h3>How long is the sequencer busy?</h3>
+  <p>Busy time ≈ Σ(duration field + 1) over all table entries, times the PWM period, plus 2 clocks. With 25.6 kHz PWM, one period is 39 µs, so the current <code>open.dat</code> and <code>close.dat</code> (411 ms profiles) keep the channel busy for about <b>411 ms</b>. <b>The busy window is the full length of the waveform file, not just the "move" part.</b></p>
+  <p>After the last entry the machine goes back to <code>idle</code> (busy = 0), even when <i>preserve last</i> is on. So holding current does <b>not</b> block the next trigger. While idle with preserve-last on, the held power is capped at <code>MAX_IDLE_POWER_CODE</code> = 64/255 (25 %).</p>
+
+  <div class="card">
+    <b>Example A: external trigger pulse shorter than the ON table</b>
+    <div class="tl">
+      <div class="tl-row"><span class="tl-lbl">AFBR input</span><div class="tl-track"><div class="tl-bar sig" style="left:5%;width:40%">high 250 ms</div></div></div>
+      <div class="tl-row"><span class="tl-lbl">ch busy</span><div class="tl-track"><div class="tl-bar busy" style="left:5%;width:66%">ON table playing · 411 ms</div></div></div>
+      <div class="tl-row"><span class="tl-lbl">triggers</span><div class="tl-track">
+        <div class="tl-mark ok" style="left:5%">▲ ON accepted</div>
+        <div class="tl-mark bad" style="left:45%">▼ OFF lost</div></div></div>
+      <div class="tl-row"><span class="tl-lbl">result</span><div class="tl-track"><div class="tl-bar held" style="left:71%;width:29%">idle, shutter stays OPEN while the input says closed</div></div></div>
+    </div>
+    <b style="display:block;margin-top:20px">Example B: software close sent while the open is still running</b>
+    <div class="tl">
+      <div class="tl-row"><span class="tl-lbl">commands</span><div class="tl-track">
+        <div class="tl-mark ok" style="left:5%">--start 2 0 1</div>
+        <div class="tl-mark bad" style="left:40%">--start 2 0 0 (≈300 ms later)</div></div></div>
+      <div class="tl-row"><span class="tl-lbl">ch1 busy</span><div class="tl-track"><div class="tl-bar busy" style="left:5%;width:66%">OPEN table · 411 ms</div></div></div>
+      <div class="tl-row"><span class="tl-lbl">result</span><div class="tl-track"><div class="tl-bar held" style="left:71%;width:29%">ends OPEN; hbr still exits 0</div></div></div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:14px 0 0">In both cases the mechanism ends up where the <i>last accepted</i> table took it, and it holds there if preserve-last is on. From the outside this looks exactly like "it went to open and stayed there".</p>
+  </div>
+
+  <h3>Every way a trigger can be lost</h3>
+  <div class="card"><table>
+    <tr><th>Cause</th><th>When it happens in practice</th><th>Symptom</th><th>Avoid / detect</th></tr>
+    <tr><td><b>Channel busy with a sequence</b></td>
+        <td>A new start within ~411 ms (the table length) of the previous one. Most likely with fast open→close cycling, an operator double-click, or a controller that retries too early.</td>
+        <td>The second move never happens. The first move completes normally.</td>
+        <td>Wait for busy = 0 (<code>0x2002</code> bit 2 for ch0, bit 3 for ch1) before triggering.</td></tr>
+    <tr><td><b>Channel busy with a single shot</b></td>
+        <td><code>--single</code> was issued less than <i>dur</i> PWM periods before the start.</td>
+        <td>Same as above.</td>
+        <td>Same busy check.</td></tr>
+    <tr><td><b>External pulse shorter than the table</b></td>
+        <td>AFBR/OCPL pulse width less than the ON table (the OFF edge is lost), or a low gap less than the OFF table (the re-open is lost). Typical when the NIM/timing signal is a short gate rather than a level.</td>
+        <td>The mechanism stays open while the input is low, or the reverse. The two go out of sync until the next edge in the right direction.</td>
+        <td>Keep input pulses and gaps longer than the table, or shorten the tables. Compare <code>0x2002</code> bits 8/9 (filtered input level) with the actual position.</td></tr>
+    <tr><td><b>Spurious edge on an enabled input</b></td>
+        <td><code>initialize_fpga.sh</code> enables <b>both</b> AFBR and OCPL on <b>both</b> channels. A floating, noisy, or unused input can produce an edge that starts a sequence, and the real trigger that follows is then lost to "busy".</td>
+        <td>Unexpected moves, then lost commands.</td>
+        <td>Enable only the inputs that are actually wired (<code>--ctrl_in_afbr/ocpl ch 0 0</code> for the rest).</td></tr>
+    <tr><td><b>Table range disabled (length field = 0)</b></td>
+        <td>(1) After power-up or <code>make refresh</code> every range resets to 0, so all triggers are ignored until a table is loaded. (2) The field stores <i>length − 1</i>, so a <b>1-entry table</b> is written as 0 and disabled. <code>compress_power_profile</code> produces a single entry for any constant waveform up to 256 PWM periods (10 ms at 25.6 kHz).</td>
+        <td>Nothing moves, and no error is reported. <code>--hbr_rep</code> shows "disabled".</td>
+        <td>Re-run bring-up and table loads after any refresh. Reject tables with fewer than 2 entries in the driver.</td></tr>
+    <tr><td><b>ON and OFF in the same clock</b></td>
+        <td>Software: the decoder gives ON priority, so OFF is lost (<code>hbr_dec_cnf.vhd:217</code>). Hardware: an AFBR rising edge and an OCPL falling edge in the same clock, where OFF wins in <code>hbr_sm</code>.</td>
+        <td>One direction ignored.</td>
+        <td>Never set both bits. Don't drive AFBR and OCPL from different sources at the same time.</td></tr>
+    <tr><td><b>Reset in the same write</b></td>
+        <td>A write to <code>0x2007</code> with the channel's reset bit (4/5) set suppresses that channel's start bit in the same write.</td>
+        <td>Start ignored.</td>
+        <td>Reset and start in two separate writes (the scripts already do this).</td></tr>
+    <tr><td><b>MODE2 = 0</b></td>
+        <td>The state machine is held in reset while MODE2 = 0 (<code>hbr_sm.vhd:124</code>). This build forces MODE2 = 1 (<code>MODE2_PROG_FIX</code>), so it only matters if that constant changes.</td>
+        <td>Nothing ever runs.</td>
+        <td>—</td></tr>
+  </table></div>
+
+  <div class="callout"><b>The current workaround has a cost.</b> The test scripts run <code>--sm_reset 3</code> before every <code>--start</code> (<code>close_then_open_v2.sh</code>). That guarantees the trigger lands, but if a move is still running it <b>aborts it mid-stroke</b>: the outputs go Hi-Z and power drops to 0 at once, and the new table then starts from wherever the mechanism happens to be. It also hides the fact that the previous move had not finished.</div>
+
+  <div class="callout info"><b>Suggested handling in the NOMAD driver:</b>
+    <ol style="margin:6px 0 0; padding-left:20px">
+      <li>Before a move, read <code>0x2002</code>. If the channel's busy bit is 1, either wait for it to clear or report "busy". Use <code>sm_reset</code> only as a deliberate <i>stop</i> command.</li>
+      <li>Write the start and read <code>0x2002</code> straight away. Busy = 1 confirms the trigger was accepted. A 411 ms table is still running about 1 ms later, so this check is reliable. Tables shorter than the ~1 ms bus round trip would need <code>0x200C</code> (sequence status) instead.</li>
+      <li>Poll until busy = 0. That marks "move finished", which is a real status to return to NOMAD instead of an unconditional 0 from <code>hbr_seq_start</code>.</li>
+      <li>Refuse to load tables with fewer than 2 entries, and after any FPGA refresh re-run bring-up and the table loads.</li>
+    </ol>
+  </div>
+
+  <div class="callout info"><b>Source of this analysis.</b> The trigger and busy behaviour described here comes from the VHDL in <code>../SRC/SHUTTER</code>. That copy is <b>older than the flashed design</b>: it still has the H-bridge block at <code>0x1000</code>, 1024-entry RAMs, and no ADC-store bits in <code>0x2007</code>. The address map on this page therefore follows the C headers, which match the flashed design (2048 entries per channel, block at <code>0x2000</code>). The sequencer and trigger logic is assumed unchanged. The VHDL line numbers quoted above refer to that older copy.</div>
+
+  <h3 id="flow-adc">ADC configuration · <span style="font-weight:400;color:var(--muted)">hbr --adc_conf</span></h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant M as hbr main
+  participant A as C_ads131m04
+  participant F as FPGA SPI master
+  participant X as ADS131M04 ×2
+  M->>A: hw_spi_reset, hw_chip_mask(3,0), hw_auto_read(0)
+  A->>F: WriteAuto +5, W1 +4, W4 +3
+  M->>A: hw_adc_reset(1)
+  F->>X: RESET pulse on SYNC_N
+  M->>A: hw_send_cmd(STANDBY)
+  M->>A: hw_rd_all_regs → print_table (expect reset values)
+  loop 30 registers, pipelined
+    A->>F: SB CMD_WR (RREG) · poll busy · RB responses +8
+    F->>X: SPI frame
+  end
+  M->>A: prepare_all_regs(64000, gc, gain, mux, …) [model only]
+  M->>A: hw_wr_all_regs(REG_ANY)
+  loop each writable register
+    A->>F: SB 2×32 +0 (WREG + data) · RB +8
+  end
+  M->>A: hw_rd_all_regs, hw_send_cmd(WAKEUP), print_table
+  </pre></div>
+
+  <h3 id="flow-dac">Setting a bridge current limit · <span style="font-weight:400;color:var(--muted)">hbr --set_hbr_vref ch V</span></h3>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  participant M as hbr main
+  participant D as C_dual_dac
+  participant F as FPGA I2C master 0x0480
+  participant C as MCP47FEB 0xC0
+  M->>D: set_dac_volt(ch, V, ref, eep)
+  D->>D: v_to_dac → 12-bit code, swap ch0/ch1
+  D->>F: i2c_reset: W4 0x0481 = 0x10000
+  D->>F: i2c_write: SB 2×32 @0x0480 (3 bytes, cmd)
+  F->>C: START · addr · reg · data hi · data lo · STOP
+  loop ≤100 until idle
+    D->>F: R4 0x0481
+  end
+  Note over D: +20 ms if the write went to EEPROM
+  </pre></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="build">
+  <h2>8 · Build &amp; files</h2>
+  <div class="card"><table>
+    <tr><th>Target</th><th>Links</th><th>Notes</th></tr>
+    <tr><td><code>hbr</code></td><td>CLogger, uart32, uart, one_xo3d_fpga8_32, C_hbr, hbr, C_ads131m04, C_simpl_stat, C_dtemp, C_dual_dac</td><td><code>-D CPU_SW32 -D DEF_BRATE=4000000 -D DEVICE_PREFIX="/dev/ttyACM" -D DEVICE_PORT=0</code></td></tr>
+    <tr><td><code>xo3d_fpga8_32</code></td><td>CLogger, uart32, uart, one_xo3d_fpga8_32, xo3d_fpga8_32</td><td>Upstream flash programmer. <span class="tag warn">built with LM32 bases 0x800110 / 0x800000</span></td></tr>
+  </table></div>
+  <div class="card"><table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>initialize_fpga.sh</code></td><td>Full bring-up (config + ADC streaming)</td></tr>
+    <tr><td><code>open_shutter.sh / close_shutter.sh</code></td><td>Load and trigger the ch1 ON/OFF table, with an overheat interlock</td></tr>
+    <tr><td><code>overheat_check.sh</code></td><td>Reads an external bench CSV (<code>hmc8012_log_resistance.py</code>)</td></tr>
+    <tr><td><code>read_temps.sh</code></td><td>Pt100 + DS18B20 via <code>--rd_reg</code>, converted in awk; <code>--time</code> measures bus latency</td></tr>
+    <tr><td><code>close_then_open*.sh, *_test.sh, stop</code></td><td>Bench cycles; <code>stop</code> = <code>--set_preserve_last 3 0</code></td></tr>
+    <tr><td><code>gen_open_close_table.py, gen_smooth_table.py, gen_table.py</code></td><td>Generate PWL files and tables offline</td></tr>
+    <tr><td><code>plot_hbr_table.py, plot_adc_buffer.py, pwr_plot.py</code></td><td>Plot tables and ADC captures</td></tr>
+    <tr><td><code>*.dat</code></td><td>PWL profiles; <code>res_wave.dat</code> = resampler debug output</td></tr>
+    <tr><td><code>pgm/*.bin</code></td><td>FPGA bitstreams (v0 only; the Makefile's v1 names are missing)</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="issues">
+  <h2>9 · Issues found while mapping</h2>
+  <div class="card"><table>
+    <tr><th>Where</th><th>Issue</th></tr>
+    <tr><td><code>C_ads131m04.h:414 / .cpp:398</code></td><td><code>prepare_all_regs</code> parameter order differs between declaration and definition (callers match the definition)</td></tr>
+    <tr><td><code>C_ads131m04.cpp:1017</code></td><td><code>hw_rd_all_regs</code> reads <code>all_ad_regs[30]</code>, out of bounds</td></tr>
+    <tr><td><code>C_ads131m04.cpp:1089</code></td><td>Brace placement: the <code>hw_wr_all_regs</code> response check runs once, after the loop</td></tr>
+    <tr><td><code>C_ads131m04.cpp:697</code></td><td><code>hw_adc_reset</code> builds a wait mask and then passes <code>wait_rdy</code> instead</td></tr>
+    <tr><td><code>C_ads131m04.cpp:226</code></td><td><code>print_offs_cal</code> loops over 3 chips (2 exist)</td></tr>
+    <tr><td><code>C_dtemp.cpp:116</code></td><td><code>i</code> is only declared under <code>#if DEBUG_DTEMP==1</code></td></tr>
+    <tr><td><code>C_hbr.cpp:1079</code></td><td><code>read_adc_buffer</code>: 16 KB stack buffer; closes the caller's FILE*</td></tr>
+    <tr><td><code>C_hbr.cpp:708</code></td><td><code>hbr_seq_start</code> polls 100× with a log line each time and returns 0 even on timeout</td></tr>
+    <tr><td><code>C_hbr.cpp:162</code></td><td><code>resample_power_profile</code> does hidden bus I/O; out-of-bounds read if flength &lt; 2</td></tr>
+    <tr><td><code>hbr.cpp:557</code></td><td><code>--read_table</code> does not check fopen for NULL</td></tr>
+    <tr><td><code>hbr.cpp:725</code></td><td><code>chip_sel</code> is uninitialised unless <code>--adc_chip_mask</code> ran first</td></tr>
+    <tr><td><code>uart32.cpp:556</code></td><td><code>WriteDWord</code> 16-bit split masks the high word with 0xFF (unused path)</td></tr>
+    <tr><td><code>uart.cpp</code></td><td>Read timeouts are never reported to callers</td></tr>
+    <tr><td><code>CLogger.cpp</code></td><td><code>va_list</code> is reused for two vfprintf calls</td></tr>
+    <tr><td>Makefile</td><td>xo3d tool and <code>start*</code> targets use LM32 addresses under SW32</td></tr>
+  </table></div>
+</section>
+
+<!-- ============================================================ -->
+<section id="nomad">
+  <h2>10 · Seams for the NOMAD driver / controller split</h2>
+  <div class="callout info">The full port plan (NOMAD conventions, communications driver, driver design, hardware-tab settings) is on a separate page: <a href="nomad.html"><b>NOMAD port plan →</b></a></div>
+  <p class="lead">Natural cut lines for the next step. This section does not propose a design.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TB
+  subgraph CTRL["Controller-side logic (today: shell scripts)"]
+    C1["bring-up sequence"]
+    C2["open / close: set_pwm, load table,<br/>preserve_last, sm_reset, start"]
+    C3["overheat interlock"]
+    C4["waveform design / PWL files"]
+  end
+  subgraph PURE["Pure computation (reusable as-is)"]
+    P1["PWL → resample → compress"]
+    P2["ADC register model / prepare_all_regs"]
+    P3["unit conversions: Pt100, DAC V, ADC scaling"]
+  end
+  subgraph DRV["Driver-side: register-level API"]
+    D1["C_hbr set_* / seq_* / upload / read_*"]
+    D2["C_ads131m04 hw_*"]
+    D3["C_dual_dac set/get"]
+    D4["C_dtemp get_*"]
+  end
+  subgraph TR["Transport"]
+    T1["uart32 + uart<br/>needs: mutex per packet, timeout detection,<br/>reconnect / SendBreak, persistent open port"]
+  end
+  CTRL --> PURE
+  CTRL --> DRV
+  DRV --> PURE
+  DRV --> TR
+  </pre></div>
+  <div class="card">
+    <ul style="margin:0">
+      <li><b>State that is lost between CLI calls today</b> (<code>tbl_data</code>, <code>chip_mask</code>, <code>last_pwm_freq</code>, the ADC register model) becomes persistent driver state.</li>
+      <li><b>An FPGA refresh wipes all configuration.</b> The driver has to detect that and re-run bring-up.</li>
+      <li>All <code>logWrite</code> output and debug read-backs should become the NOMAD logger and return values.</li>
+      <li>Sequencer status (<code>0x2002</code> busy bits, <code>0x200C</code>) should be read to give a real "move finished" state instead of relying on <code>sm_reset</code>.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+const root = document.documentElement;
+function isDark() {
+  const t = root.getAttribute('data-theme');
+  if (t) return t === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+const sources = [...document.querySelectorAll('pre.mermaid')].map(el => el.textContent);
+
+async function render() {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark() ? 'dark' : 'default',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    securityLevel: 'loose',
+    flowchart: { curve: 'basis', htmlLabels: true },
+    sequence: { mirrorActors: false, showSequenceNumbers: false }
+  });
+  document.querySelectorAll('pre.mermaid').forEach((el, i) => {
+    el.removeAttribute('data-processed');
+    el.innerHTML = '';
+    el.textContent = sources[i];
+  });
+  await mermaid.run({ querySelector: 'pre.mermaid' });
+}
+render();
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+  try { localStorage.setItem('n219-theme', root.getAttribute('data-theme')); } catch (e) {}
+  render();
+});
+try {
+  const saved = localStorage.getItem('n219-theme');
+  if (saved) { root.setAttribute('data-theme', saved); render(); }
+} catch (e) {}
+
+// filter across function tables
+const input = document.getElementById('fnSearch');
+input.addEventListener('input', () => {
+  const q = input.value.trim().toLowerCase();
+  document.querySelectorAll('table.fn tr').forEach(tr => {
+    if (tr.querySelector('th')) return;
+    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>

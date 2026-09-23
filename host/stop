@@ -1,0 +1,2 @@
+#!/bin/bash
+./hbr --set_preserve_last 3 0
