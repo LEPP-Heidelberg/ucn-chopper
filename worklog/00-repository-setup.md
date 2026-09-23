@@ -177,6 +177,37 @@ checkout.
 
 Repository after this pass: about 6.3 MB, 324 tracked files.
 
+## Trimming the FPGA copy to what is actually used
+
+A file count of 382 looked suspicious, so the FPGA copy was checked against the design's own
+file lists (`fpga/N219_4x_H-Bridge/COMPILE/sources.mk` and the Diamond project
+`diamond/xo2_with_lm32.ldf`) instead of being taken on trust. Those lists reference:
+
+- `SRC/TOP`, `SRC/SHUTTER`, `SRC/ADS131M04_32bit`, `SRC/I2C`, `SRC/UART`, `SRC/CORES`
+  (project-local), and
+- `COMMON` (17 files), `UART32` (11), `TSENS` (5), `CORES` (2) from the shared tree, and
+- exactly **3 files** from `plattform/lm32_xo2/soc/`.
+
+Removed as unreferenced:
+
+| Removed | Files | Why |
+|---|---|---|
+| `plattform/lm32_xo2/components/` | 95 | Lattice IP-generation working area for the LM32 core. Neither `sources.mk` nor the `.ldf` refers to it; only `lm32_xo2/soc/` is used |
+| `shared-SRC/S_D_ADC` | 6 | Sigma-delta ADC cores for other boards |
+| `shared-SRC/I2C_MAST` | 2 | The design uses the project-local `SRC/I2C` instead |
+
+Kept despite ambiguity:
+
+- `shared-SRC/SW32` — the host code is built with `CPU_SW32`, so the soft CPU in the flashed
+  design is SW32, even though `sources.mk` lists LM32 files. Small, and better kept until
+  that is confirmed.
+- `plattform/C` — LM32 CPU firmware. Possibly legacy for the same reason, but it is the only
+  copy of the CPU source here.
+
+**Result: 279 tracked files, 3.8 MB.** Roughly 50 are the host code, 9 upstream, 10 docs, and
+the rest the FPGA design. Nothing outside the N219 project and the cores it uses is tracked;
+the other 66 projects in the SVN tree are not in this repository.
+
 ## Next step
 
 `01-…`: the byte-recording test harness moved into the repository, so that later changes to
