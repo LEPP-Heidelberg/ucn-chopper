@@ -52,6 +52,17 @@ calling open/close) still use `$SCRIPT_DIR`, which is correct: they live in the 
 README updated to the new layout, including that the scripts are run from
 `operation_scripts/` and that `hbr` must be built first.
 
+## Also moved
+
+`uart_probe.sh` (worklog 02) was added under `host/tools/` before the reorganisation. It is
+an operator-facing diagnostic rather than a build or waveform tool, so it now sits in
+`operation_scripts/` next to `read_temps.sh`. It has no path dependencies of its own — only
+the `DEV`, `BAUD` and `ID` environment variables — so the move needed no code change.
+`host/tools/` is now empty and gone; the Python helpers live in `waveforms/tools/`.
+
+Earlier worklog entries describe the layout as it was at the time they were written; paths
+in them are not updated retrospectively. This entry is the record of the move.
+
 ## Note
 
 This is the cost of locating files by path: moving a folder breaks it silently. The scripts

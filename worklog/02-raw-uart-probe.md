@@ -7,15 +7,20 @@ software stack.
 
 ## What was added
 
-`host/tools/uart_probe.sh` — a pure shell script using `stty` and shell redirection:
+`operation_scripts/uart_probe.sh` — a pure shell script using `stty` and shell redirection:
 
 ```bash
-tools/uart_probe.sh status              # a few known registers at once
-tools/uart_probe.sh read  0x2003        # PWM frequency code (1 byte)
-tools/uart_probe.sh read  0x0808 4      # CPU build stamp (4 bytes)
-tools/uart_probe.sh write 0x2003 5      # set PWM code 5 (25.6 kHz)
-DEV=/dev/ttyUSB0 tools/uart_probe.sh status     # optical link
+cd operation_scripts
+./uart_probe.sh status              # a few known registers at once
+./uart_probe.sh read  0x2003        # PWM frequency code (1 byte)
+./uart_probe.sh read  0x0808 4      # CPU build stamp (4 bytes)
+./uart_probe.sh write 0x2003 5      # set PWM code 5 (25.6 kHz)
+DEV=/dev/ttyUSB0 ./uart_probe.sh status     # optical link
 ```
+
+*(Originally added under `host/tools/`; moved to `operation_scripts/` to match the folder
+reorganisation — it is an operator-facing diagnostic, like `read_temps.sh`, and it has no
+path dependencies of its own.)*
 
 It builds the UART32 packet by hand:
 
@@ -60,7 +65,7 @@ usbipd list
 usbipd attach --wsl --busid <BUSID>
 ```
 
-Then `ls /dev/ttyACM0` in WSL, and run `tools/uart_probe.sh status`.
+Then `ls /dev/ttyACM0` in WSL, and run `operation_scripts/uart_probe.sh status`.
 
 ## Reference values seen earlier on this board
 

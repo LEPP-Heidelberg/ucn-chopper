@@ -17,8 +17,7 @@ The code was branched off from the subversion of the PI on 22.09.2026, so if cha
 | Path | Contents |
 |---|---|
 | `host/` | The chopper code and its `Makefile`: `C_hbr`, `C_ads131m04`, `C_dual_dac`, `C_dtemp`, `C_simpl_stat`, and the `hbr` command-line tool |
-| `host/tools/` | `uart_probe.sh` — raw UART32 connection test, no C++ involved |
-| `operation_scripts/` | Day-to-day operation: bring-up, open, close, temperatures, test cycles |
+| `operation_scripts/` | Day-to-day operation: bring-up, open, close, temperatures, test cycles, and `uart_probe.sh` (raw UART32 connection test, no C++ involved) |
 | `waveforms/` | PWL waveform files the scripts load (`open.dat`, `close.dat`, test shapes); `legacy/` and `experiments/` hold older and one-off ones |
 | `waveforms/tools/` | Python helpers: waveform generators, plotting, the bench multimeter logger |
 | `upstream/` | Shared code from the Heidelberg SVN repository that the chopper code is built from: `uart`, `uart32`, `CLogger`, `one_xo3d_fpga8_32`, and the `xo3d_fpga8_32` flash tool |
@@ -49,7 +48,7 @@ cd operation_scripts
 
 DEV=/dev/ttyUSB0 ./initialize_fpga.sh    # same, over the optical link
 
-../host/tools/uart_probe.sh status       # raw connection test: UART32 with stty and shell
+./uart_probe.sh status                   # raw connection test: UART32 with stty and shell
                                          # only, no hbr and no C++ involved
 ```
 
