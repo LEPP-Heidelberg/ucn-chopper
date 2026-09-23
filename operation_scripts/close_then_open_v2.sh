@@ -13,9 +13,10 @@
 #
 # Usage: ./close_then_open_v2.sh <count>
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 set -e
-PROJ_DIR="$SCRIPT_DIR"
-HBR="$PROJ_DIR/hbr"
+PROJ_DIR="$SCRIPT_DIR"          # the scripts live here; hbr is in $REPO_ROOT/host
+HBR="$REPO_ROOT/host/hbr"
 CYCLE_GAP=0.8
 
 count="$1"

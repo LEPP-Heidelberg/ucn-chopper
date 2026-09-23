@@ -8,11 +8,12 @@
 # streaming mode, so `hbr --get_adc_buff` silently returns an empty/flat
 # capture no matter what waveform you send.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 set -e
 
 DEV=${DEV:-/dev/ttyACM0}   # USB-CDC link; use DEV=/dev/ttyUSB0 for the optical link
-PROJ_DIR="$SCRIPT_DIR"
-HBR="$PROJ_DIR/hbr"
+PROJ_DIR="$SCRIPT_DIR"          # the scripts live here; hbr is in $REPO_ROOT/host
+HBR="$REPO_ROOT/host/hbr"
 
 # same defaults as the Makefile's hbr_conf target
 PWM_FREQ=25600

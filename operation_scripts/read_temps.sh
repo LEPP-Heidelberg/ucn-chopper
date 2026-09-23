@@ -15,13 +15,14 @@
 # Usage: ./read_temps.sh [--time]
 #   --time  also measure how long the Pt100 readout takes (see time_pt100 below)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 set -e
 
 DEV=${DEV:-/dev/ttyACM0}   # USB-CDC link; /dev/ttyUSB0 for the optical link
 BASE=${BASE:-0x000000}
 TIME_PT100=0
 [ "$1" = "--time" ] && TIME_PT100=1
-HBR=${HBR:-$SCRIPT_DIR/hbr}
+HBR=${HBR:-$REPO_ROOT/host/hbr}
 
 ADDR_PT100_0=$((BASE + 0x0800 + 0x0004))
 ADDR_DTEMP=$((BASE + 0x0490))

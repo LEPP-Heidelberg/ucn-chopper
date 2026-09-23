@@ -17,8 +17,9 @@
 # and right after the start trigger so you can see exactly what the
 # hardware reports at each step, and compare against physical movement.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 set -e
-HBR="$SCRIPT_DIR/hbr"
+HBR="$REPO_ROOT/host/hbr"
 DEV=${DEV:-/dev/ttyACM0}   # USB-CDC link; use DEV=/dev/ttyUSB0 for the optical link
 source "$SCRIPT_DIR/overheat_check.sh"
 
@@ -40,7 +41,7 @@ echo "=== config readback BEFORE loading table / triggering start ==="
 "$HBR" --nll --hbr_rep
 
 echo "=== load table and trigger start ==="
-"$HBR" --nll --read_table "$SCRIPT_DIR/waveforms/close.dat" 0 1 1 --load_table 1 1
+"$HBR" --nll --read_table "$REPO_ROOT/waveforms/close.dat" 0 1 1 --load_table 1 1
 "$HBR" --nll --set_preserve_last 3 1
 "$HBR" --nll --start 2 0 1
 

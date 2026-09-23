@@ -16,9 +16,11 @@ The code was branched off from the subversion of the PI on 22.09.2026, so if cha
 
 | Path | Contents |
 |---|---|
-| `host/` | The chopper code: `C_hbr`, `C_ads131m04`, `C_dual_dac`, `C_dtemp`, `C_simpl_stat`, the `hbr` command-line tool, `Makefile`, and the bench shell scripts |
-| `host/tools/` | Python helpers: waveform generators, plotting, the bench multimeter logger |
-| `host/waveforms/` | PWL waveform files used by the scripts (`open.dat`, `close.dat`, test shapes); `legacy/` holds older ones |
+| `host/` | The chopper code and its `Makefile`: `C_hbr`, `C_ads131m04`, `C_dual_dac`, `C_dtemp`, `C_simpl_stat`, and the `hbr` command-line tool |
+| `host/tools/` | `uart_probe.sh` — raw UART32 connection test, no C++ involved |
+| `operation_scripts/` | Day-to-day operation: bring-up, open, close, temperatures, test cycles |
+| `waveforms/` | PWL waveform files the scripts load (`open.dat`, `close.dat`, test shapes); `legacy/` and `experiments/` hold older and one-off ones |
+| `waveforms/tools/` | Python helpers: waveform generators, plotting, the bench multimeter logger |
 | `upstream/` | Shared code from the Heidelberg SVN repository that the chopper code is built from: `uart`, `uart32`, `CLogger`, `one_xo3d_fpga8_32`, and the `xo3d_fpga8_32` flash tool |
 | `docs/` | `CODE_MAP.md` (full map of the code and the FPGA register map) and two browsable pages: `index.html` (code map) and `nomad.html` (the NOMAD port plan) |
 | `docs/reference/` | Bench outputs kept as reference (plots, `fstatus`/init logs) and the earlier NOMAD design draft |
@@ -38,19 +40,22 @@ Requires `g++` only. The board is reached at `/dev/ttyACM0` (USB-CDC) or `/dev/t
 ## Everyday use
 
 ```bash
-cd host
+cd operation_scripts
 ./initialize_fpga.sh          # after every power-cycle or FPGA refresh
 ./open_shutter.sh             # load the opening waveform and trigger it
 ./close_shutter.sh
 ./read_temps.sh               # Pt100 + DS18B20, read-only
-./stop                        # release the hold current
+../host/stop                  # release the hold current
 
-tools/uart_probe.sh status    # raw connection test: talks UART32 with stty + shell only,
-                              # no hbr and no C++ involved
+DEV=/dev/ttyUSB0 ./initialize_fpga.sh    # same, over the optical link
+
+../host/tools/uart_probe.sh status       # raw connection test: UART32 with stty and shell
+                                         # only, no hbr and no C++ involved
 ```
 
-The scripts find `hbr` and the waveform files relative to their own location, so the
-repository can be cloned anywhere.
+The scripts locate `hbr` and the waveform files from the repository root, which they work
+out from their own path, so the repository can be cloned anywhere. `hbr` must be built
+first (`cd host && make hbr`).
 
 ## Documentation
 
