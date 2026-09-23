@@ -1,0 +1,173 @@
+# Setting /dev/ttyUSB1 to low latency mode
+# Setting PWM frequency to 24000 Hz, read back 24000 Hz
+# Read the PWM waveform from a file...
+# PWL
+# time in ms           power in % (-100...+100)
+#   1 => Time  0.000 ms  Power     0.0 %
+#   2 => Time  0.100 ms  Power    50.0 %
+#   3 => Time  0.200 ms  Power    75.0 %
+#   4 => Time  0.300 ms  Power   100.0 %
+#   5 => Time  1.000 ms  Power   100.0 %
+#   6 => Time  2.000 ms  Power    50.0 %
+#   7 => Time  2.200 ms  Power     0.0 %
+#   8 => Time  2.300 ms  Power   -70.0 %
+#   9 => Time  2.400 ms  Power   -90.0 %
+#  10 => Time  2.500 ms  Power   -90.0 %
+#  11 => Time  2.600 ms  Power   -50.0 %
+#  12 => Time  2.700 ms  Power     0.0 %
+#  13 => Time  2.800 ms  Power    20.0 %
+#  14 => Time  4.000 ms  Power    20.0 %
+# Read 14 data points. Time[ms] from 0.000 to 4.000, Power[%] from -90.0 to 100.0
+# RESAMPLE
+# Using the last PWM frequency 24000 Hz!
+#   0 => Time  0.021 ms  Power   27
+#   1 => Time  0.062 ms  Power   80
+#   2 => Time  0.104 ms  Power  130
+#   3 => Time  0.146 ms  Power  157
+#   4 => Time  0.188 ms  Power  183
+#   5 => Time  0.229 ms  Power  210
+#   6 => Time  0.271 ms  Power  236
+#   7 => Time  0.313 ms  Power  255
+#   8 => Time  0.354 ms  Power  255
+#   9 => Time  0.396 ms  Power  255
+#  10 => Time  0.438 ms  Power  255
+#  11 => Time  0.479 ms  Power  255
+#  12 => Time  0.521 ms  Power  255
+#  13 => Time  0.562 ms  Power  255
+#  14 => Time  0.604 ms  Power  255
+#  15 => Time  0.646 ms  Power  255
+#  16 => Time  0.688 ms  Power  255
+#  17 => Time  0.729 ms  Power  255
+#  18 => Time  0.771 ms  Power  255
+#  19 => Time  0.812 ms  Power  255
+#  20 => Time  0.854 ms  Power  255
+#  21 => Time  0.896 ms  Power  255
+#  22 => Time  0.938 ms  Power  255
+#  23 => Time  0.979 ms  Power  255
+#  24 => Time  1.021 ms  Power  252
+#  25 => Time  1.063 ms  Power  247
+#  26 => Time  1.104 ms  Power  242
+#  27 => Time  1.146 ms  Power  236
+#  28 => Time  1.188 ms  Power  231
+#  29 => Time  1.229 ms  Power  226
+#  30 => Time  1.271 ms  Power  220
+#  31 => Time  1.313 ms  Power  215
+#  32 => Time  1.354 ms  Power  210
+#  33 => Time  1.396 ms  Power  205
+#  34 => Time  1.438 ms  Power  199
+#  35 => Time  1.479 ms  Power  194
+#  36 => Time  1.521 ms  Power  189
+#  37 => Time  1.563 ms  Power  183
+#  38 => Time  1.604 ms  Power  178
+#  39 => Time  1.646 ms  Power  173
+#  40 => Time  1.688 ms  Power  167
+#  41 => Time  1.729 ms  Power  162
+#  42 => Time  1.771 ms  Power  157
+#  43 => Time  1.813 ms  Power  151
+#  44 => Time  1.854 ms  Power  146
+#  45 => Time  1.896 ms  Power  141
+#  46 => Time  1.938 ms  Power  135
+#  47 => Time  1.979 ms  Power  130
+#  48 => Time  2.021 ms  Power  114
+#  49 => Time  2.062 ms  Power   88
+#  50 => Time  2.104 ms  Power   61
+#  51 => Time  2.146 ms  Power   35
+#  52 => Time  2.188 ms  Power    8
+#  53 => Time  2.229 ms  Power  -51
+#  54 => Time  2.271 ms  Power -125
+#  55 => Time  2.312 ms  Power -184
+#  56 => Time  2.354 ms  Power -205
+#  57 => Time  2.396 ms  Power -226
+#  58 => Time  2.438 ms  Power -229
+#  59 => Time  2.479 ms  Power -229
+#  60 => Time  2.521 ms  Power -207
+#  61 => Time  2.562 ms  Power -165
+#  62 => Time  2.604 ms  Power -121
+#  63 => Time  2.646 ms  Power  -68
+#  64 => Time  2.688 ms  Power  -15
+#  65 => Time  2.729 ms  Power   15
+#  66 => Time  2.771 ms  Power   36
+#  67 => Time  2.812 ms  Power   51
+#  68 => Time  2.854 ms  Power   51
+#  69 => Time  2.896 ms  Power   51
+#  70 => Time  2.938 ms  Power   51
+#  71 => Time  2.979 ms  Power   51
+#  72 => Time  3.021 ms  Power   51
+#  73 => Time  3.062 ms  Power   51
+#  74 => Time  3.104 ms  Power   51
+#  75 => Time  3.146 ms  Power   51
+#  76 => Time  3.188 ms  Power   51
+#  77 => Time  3.229 ms  Power   51
+#  78 => Time  3.271 ms  Power   51
+#  79 => Time  3.312 ms  Power   51
+#  80 => Time  3.354 ms  Power   51
+#  81 => Time  3.396 ms  Power   51
+#  82 => Time  3.438 ms  Power   51
+#  83 => Time  3.479 ms  Power   51
+#  84 => Time  3.521 ms  Power   51
+#  85 => Time  3.562 ms  Power   51
+#  86 => Time  3.604 ms  Power   51
+#  87 => Time  3.646 ms  Power   51
+#  88 => Time  3.688 ms  Power   51
+#  89 => Time  3.729 ms  Power   51
+#  90 => Time  3.771 ms  Power   51
+#  91 => Time  3.812 ms  Power   51
+#  92 => Time  3.854 ms  Power   51
+#  93 => Time  3.896 ms  Power   51
+#  94 => Time  3.938 ms  Power   51
+#  95 => Time  3.979 ms  Power   51
+# 96 data points
+# COMPRESS
+# input idx, output idx, h-state, repetitions-1, power
+#   0    0  1    0   27
+#   1    1  1    0   80
+#   2    2  1    0  130
+#   3    3  1    0  157
+#   4    4  1    0  183
+#   5    5  1    0  210
+#   6    6  1    0  236
+#  23    7  1   16  255
+#  24    8  1    0  252
+#  25    9  1    0  247
+#  26   10  1    0  242
+#  27   11  1    0  236
+#  28   12  1    0  231
+#  29   13  1    0  226
+#  30   14  1    0  220
+#  31   15  1    0  215
+#  32   16  1    0  210
+#  33   17  1    0  205
+#  34   18  1    0  199
+#  35   19  1    0  194
+#  36   20  1    0  189
+#  37   21  1    0  183
+#  38   22  1    0  178
+#  39   23  1    0  173
+#  40   24  1    0  167
+#  41   25  1    0  162
+#  42   26  1    0  157
+#  43   27  1    0  151
+#  44   28  1    0  146
+#  45   29  1    0  141
+#  46   30  1    0  135
+#  47   31  1    0  130
+#  48   32  1    0  114
+#  49   33  1    0   88
+#  50   34  1    0   61
+#  51   35  1    0   35
+#  52   36  1    0    8
+#  53   37  2    0   51
+#  54   38  2    0  125
+#  55   39  2    0  184
+#  56   40  2    0  205
+#  57   41  2    0  226
+#  59   42  2    1  229
+#  60   43  2    0  207
+#  61   44  2    0  165
+#  62   45  2    0  121
+#  63   46  2    0   68
+#  64   47  2    0   15
+#  65   48  1    0   15
+#  66   49  1    0   36
+#  95   50  1   28   51
+# Set table for ch2, sequence 0: start at 0, length 51

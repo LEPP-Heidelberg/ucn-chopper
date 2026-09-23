@@ -148,6 +148,35 @@ Two things worth knowing:
 
 Re-verified after these edits: `make hbr` still builds and `plot_adc_buffer.py` still parses.
 
+## Second pass: everything we use
+
+The first pass kept only source code. On review we decided the repository should hold
+**everything the project actually uses**, so that it can be rebuilt and understood without
+the SVN tree. Added:
+
+| Added | Why |
+|---|---|
+| `host/pgm/*.bin` (2 × 252 KB) | The FPGA bitstreams the `Makefile`'s `prog_w` / `prog_g` targets flash. Placed where the `Makefile` already expects them (`./pgm/`), so those targets now work from a clone |
+| `fpga/N219_4x_H-Bridge/` (`SRC`, `COMPILE`, `SIM`, `diamond`, `plattform`) | The FPGA design: VHDL, build scripts, simulation, Lattice project, and the LM32 CPU firmware in `plattform/C` |
+| `fpga/shared-SRC/` (`COMMON`, `CORES`, `I2C_MAST`, `S_D_ADC`, `SW32`, `TSENS`, `UART32`, `UART_CORE`) | The shared cores the N219 design instantiates, e.g. `filt_long` in `COMMON`, which the dropped-trigger analysis relies on. The other families (`CORES_MAX10`, `CORES_ECP5U`, `CORES_iCE40UP`, `SW16`) are for different chips and were left out |
+| `host/waveforms/experiments/` | The remaining bench `.dat` waveforms from `~/chopper` that the scripts don't reference directly |
+| `docs/reference/` | `check.png`, `waveform.png`, `exp_pulse.png`, `pwr_plot.png`, `fstatus.log`, `hbr_init.log`, and the earlier NOMAD design draft (`HeidelbergChopper-Design-draft-2026-09-15.md`), which `docs/nomad.html` §7 compares against |
+
+Still excluded, deliberately: build output (`*.o`, `hbr`, `xo3d_fpga8_32`), Lattice tool
+output (`diamond/impl1/`, `plattform/C/…/Release/`, IP-generator logs), and the multimeter
+CSV logs in `~/chopper` (bench data, and `overheat_check.sh` reads them from a configurable
+`LOG_DIR`).
+
+`.gitignore` was reworked so the build-output rules apply to `host/` only, FPGA tool output
+is ignored under `fpga/`, and the reference plots and logs in `docs/reference/` are kept.
+
+**Caution recorded in the README:** the `fpga/` snapshot is *older than the design running
+on the board* (H-bridge block at `0x1000`, 1024-entry RAMs, no ADC-store bits). The C
+headers in `host/` are authoritative for addresses. For FPGA work, take a fresh SVN
+checkout.
+
+Repository after this pass: about 6.3 MB, 324 tracked files.
+
 ## Next step
 
 `01-…`: the byte-recording test harness moved into the repository, so that later changes to

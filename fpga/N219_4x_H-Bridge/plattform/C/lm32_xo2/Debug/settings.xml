@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PROJECT path="..">
+<SYSLIB>
+<MSB_FILE path="./../../lm32_xo2/soc" name="lm32_xo2.msb" />
+<LATTICE_MDK_PERIPHERALS rootdir="../../../lm32_xo2/soc/../components"/>
+<BUILD_CFG name="Debug"/>
+<USER_PREFS name="user.pref" path=".."/>
+<BUILD>
+<COMPILER flags="-D__RELOCATE_EXCEPTION_TABLE__ -ffunction-sections -O0 -g2 -Wall"/>
+</BUILD>
+</SYSLIB>
+</PROJECT>

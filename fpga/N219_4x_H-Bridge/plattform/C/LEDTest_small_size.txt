@@ -1,0 +1,28 @@
+This example exercises the LEDs
+on LatticeMico32 Development board.
+
+It scrolls a running pattern on the LEDs.
+
+This template is similar to LEDTest, except,
+it overrides LatticeDDInit implementation
+and does not use printf and lookup services
+to reduce code size.
+
+-----------------------------------------
+NOTE: This may not work on the ISS if the
+      ISS is not modified to support GPIO
+      instance.
+-----------------------------------------
+
+ PREREQUISITES:
+                                                                                                    
+ - GPIO with 8-bit output named LED
+   connected to the board's LED pins.
+
+******************************************
+This example will run on the Lattice 
+Standard PCI Express Development board
+using PlatformF & targeting a 
+LFE2M35E-7F672CES device. 
+******************************************
+

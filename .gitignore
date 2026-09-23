@@ -1,22 +1,30 @@
-# build output
-*.o
+# --- build output (host) ---
+host/*.o
 host/hbr
 host/xo3d_fpga8_32
 *.exe
 
-# generated at runtime by hbr / the scripts
-res_wave.dat
-adc.dat
-*.log
-plot.png
-*.png
+# --- generated at runtime by hbr / the scripts ---
+host/res_wave.dat
+host/adc.dat
+host/*.log
+host/plot.png
 
-# WSL / Windows artefacts
+# --- FPGA tool output (Lattice / IP express) ---
+fpga/**/*.log
+fpga/**/Release/
+fpga/**/impl*/
+fpga/**/*.jed
+fpga/**/*.bit
+
+# but keep the deliberately kept reference material
+!docs/reference/*.png
+!docs/reference/*.log
+
+# --- WSL / Windows / editors ---
 *:Zone.Identifier
 __pycache__/
 *.pyc
-
-# editors
 .vscode/
 .idea/
 *.swp

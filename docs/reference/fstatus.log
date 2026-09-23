@@ -1,0 +1,23 @@
+./xo3d_fpga8_32 --br 4000000 --dev /dev/ttyUSB1 --id 1 --fstatus
+Running on LINUX
+# Setting /dev/ttyUSB1 to low latency mode
+# FPGA config status of board 1, emulate CRC error is 0
+#
+# FPGA device ID is 0x212e3043, FPGA is MachXO3D-9400
+# USERCODE in design is 0xabcdef01
+# USERCODE in flash  is 0x16161a8b
+# Programmed on 2026-08-26 at 16:05:22
+# TRACE_ID is: 0x13501f4b
+# FEATURE_ROW is: 00 00 00 00 00 00 00 00
+# Feature bits: bbb=0, mspi=0, i2c=0, sspi=0, jtag=0, done=0, initn=0, programn=0, my_assp=0, flash_prot=0, i2c_degl=0, i2c_degl_rng=0, vers_rollback=0
+# Special pins/ports enabled: PROGRAMN JTAG SSPI I2C
+# Boot sequence: Dual boot CFG0->CFG1
+# Design compiled for image 0
+# Hardwire version 0, assembly version 0
+# SVN revision 1212 from 2026-08-21
+# Compiled on 2026-08-26 at 09:36
+# CRC status byte is 0x21 => in progress 1, done 0, err 0, force_err 0, start 0, enable 1
+# CRC status byte is 0x11 => in progress 0, done 1, err 0, force_err 0, start 0, enable 1
+# CRC counter is 264723, CRC timer is 378277
+# Real time is 7.881 ms, CRC frequency is 33.591 MHz, expected 33.250 MHz, deviation 1.0 %
+#

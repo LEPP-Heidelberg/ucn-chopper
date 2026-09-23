@@ -1,0 +1,379 @@
+# $Id: pins_1.lpf 1217 2026-09-03 13:17:29Z  $:
+#
+# for QFN72 pin package
+#
+BLOCK RESETPATHS ;
+BLOCK ASYNCPATHS ;
+BLOCK INTERCLOCKDOMAIN PATHS;
+#
+# clock
+#
+USE PRIMARY NET "clk_sys" ;
+USE PRIMARY NET "clk_ads" ;
+USE PRIMARY NET "clk_ts" ;
+# can use primary or secondary, doesn't matter
+USE PRIMARY NET "top_i/top_bus_i/config_i/sed_check_i/SEDCLKOUT" ;
+#USE SECONDARY NET "top_i/top_bus_i/config_i/sed_check_i/SEDCLKOUT" ;
+#
+# driving force DRIVE=4, 8, 16 [mA]
+#
+# quartz clock
+FREQUENCY PORT "clk_x"          24.576 MHz ;
+#
+IOBUF PORT "clk_x"              IO_TYPE=LVCMOS33 PULLMODE=NONE ;
+#
+IOBUF PORT "reset_n"            IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+#
+IOBUF PORT "dtemp[0]"           IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "dtemp[1]"           IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "dtemp[2]"           IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "dtemp[3]"           IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+#
+# uart from USB
+#
+IOBUF PORT "uart_usb_rx"        IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "uart_usb_tx"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+#
+IOBUF PORT "uart_opt_rx"        IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "uart_opt_tx"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+# status H-bridge
+IOBUF PORT "h_fault_n"          IO_TYPE=LVCMOS33 PULLMODE=UP HYSTERESIS=LARGE ;
+#
+# outputs to the H-bridge
+#
+IOBUF PORT "h_toff"             IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_toff_330k_gnd"    IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_decay"            IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_ocpm"             IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_sleep_n"          IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+
+IOBUF PORT "h_mode[1]"          IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_mode[2]"          IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_inp[1]"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_inp[2]"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_inp[3]"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_inp[4]"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+
+IOBUF PORT "control_ocpl[1]"    IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "control_ocpl[2]"    IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "control_afbr[1]"    IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "control_afbr[2]"    IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "light_sw[1]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "light_sw[2]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "light_sw[3]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "light_sw[4]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+
+IOBUF PORT "dac_scl"            IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "dac_sda"            IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+
+IOBUF PORT "ads_miso[0]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "ads_miso[1]"        IO_TYPE=LVCMOS33 PULLMODE=DOWN CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "ads_drdy_n[0]"      IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+IOBUF PORT "ads_drdy_n[1]"      IO_TYPE=LVCMOS33 PULLMODE=UP CLAMP=OFF HYSTERESIS=LARGE ;
+
+IOBUF PORT "ads_mosi"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "ads_cs_n"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "ads_sync_n"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "ads_mclk"           IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "ads_sclk[0]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "ads_sclk[1]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+
+# debug outputs
+IOBUF PORT "h_debug[0]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[1]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[2]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[3]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[4]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[5]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[6]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "h_debug[7]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+# TDO
+IOBUF PORT "light_sw[1]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+# TDI
+IOBUF PORT "light_sw[2]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+# TMS
+IOBUF PORT "light_sw[3]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+# TCK
+IOBUF PORT "light_sw[4]"        IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+IOBUF PORT "gnd_pin[0]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "gnd_pin[1]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "gnd_pin[2]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+IOBUF PORT "gnd_pin[3]"         IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+# LEDs with serial interface
+IOBUF PORT "led_out"            IO_TYPE=LVCMOS33 DRIVE=4 SLEWRATE=SLOW PULLMODE=NONE;
+#
+#
+# IO bank voltage
+#
+BANK 0 VCCIO 3.3 V;
+BANK 1 VCCIO 3.3 V;
+BANK 2 VCCIO 3.3 V;
+BANK 3 VCCIO 3.3 V;
+BANK 4 VCCIO 3.3 V;
+BANK 5 VCCIO 3.3 V;
+#
+#
+# PIN LOCATION CONSTRAINTS
+#
+# local clock oscillator
+#
+LOCATE COMP "clk_x"             SITE "50" ;
+LOCATE COMP "reset_n"           SITE "52" ;
+#
+# uart from USB
+#
+LOCATE COMP "uart_usb_rx"       SITE "33" ;
+LOCATE COMP "uart_usb_tx"       SITE "34" ;
+#
+LOCATE COMP "uart_opt_rx"       SITE "67" ;
+LOCATE COMP "uart_opt_tx"       SITE "66" ;
+#
+# debug outputs
+LOCATE COMP "h_debug[0]"        SITE "37" ;
+LOCATE COMP "h_debug[1]"        SITE "38" ;
+LOCATE COMP "h_debug[2]"        SITE "40" ;
+LOCATE COMP "h_debug[3]"        SITE "41" ;
+LOCATE COMP "h_debug[4]"        SITE "43" ;
+LOCATE COMP "h_debug[5]"        SITE "44" ;
+LOCATE COMP "h_debug[6]"        SITE "45" ;
+LOCATE COMP "h_debug[7]"        SITE "47" ;
+#
+#
+LOCATE COMP "gnd_pin[0]"        SITE "49" ;
+LOCATE COMP "gnd_pin[1]"        SITE "51" ;
+LOCATE COMP "gnd_pin[2]"        SITE "14" ;
+LOCATE COMP "gnd_pin[3]"        SITE "31" ;
+#
+# LEDs with serial interface
+LOCATE COMP "led_out"           SITE "59" ;
+#
+LOCATE COMP "h_toff"            SITE "23" ;
+LOCATE COMP "h_toff_330k_gnd"   SITE "24" ;
+LOCATE COMP "h_decay"           SITE "22" ;
+LOCATE COMP "h_ocpm"            SITE "28" ;
+LOCATE COMP "h_sleep_n"         SITE "16" ;
+LOCATE COMP "h_fault_n"         SITE "30" ;
+#
+LOCATE COMP "h_mode[1]"         SITE "27" ;
+LOCATE COMP "h_mode[2]"         SITE "26" ;
+LOCATE COMP "h_inp[1]"          SITE "17" ;
+LOCATE COMP "h_inp[2]"          SITE "19" ;
+LOCATE COMP "h_inp[3]"          SITE "20" ;
+LOCATE COMP "h_inp[4]"          SITE "21" ;
+#
+LOCATE COMP "control_ocpl[2]"   SITE "53" ;
+LOCATE COMP "control_ocpl[1]"   SITE "58" ;
+LOCATE COMP "control_afbr[2]"   SITE "63" ;
+LOCATE COMP "control_afbr[1]"   SITE "65" ;
+#LOCATE COMP "light_sw[1]"       SITE "54" ;
+#LOCATE COMP "light_sw[2]"       SITE "54" ;
+#LOCATE COMP "light_sw[3]"       SITE "54" ;
+#LOCATE COMP "light_sw[4]"       SITE "54" ;
+#
+LOCATE COMP "dac_scl"           SITE "35" ;
+LOCATE COMP "dac_sda"           SITE "36" ;
+#
+LOCATE COMP "ads_miso[0]"       SITE "11" ;
+LOCATE COMP "ads_miso[1]"       SITE "12" ;
+LOCATE COMP "ads_drdy_n[0]"     SITE  "6" ;
+LOCATE COMP "ads_drdy_n[1]"     SITE  "7" ;
+LOCATE COMP "ads_mosi"          SITE "10" ;
+LOCATE COMP "ads_cs_n"          SITE "56" ;
+LOCATE COMP "ads_sync_n"        SITE "57" ;
+LOCATE COMP "ads_mclk"          SITE "13" ;
+LOCATE COMP "ads_sclk[0]"       SITE  "8" ;
+LOCATE COMP "ads_sclk[1]"       SITE  "9" ;
+#
+LOCATE COMP "dtemp[0]"          SITE  "69" ;
+LOCATE COMP "dtemp[1]"          SITE  "68" ;
+LOCATE COMP "dtemp[2]"          SITE  "4" ;
+LOCATE COMP "dtemp[3]"          SITE  "3" ;
+#
+# TDO
+LOCATE COMP "light_sw[1]"       SITE  "2" ;
+# TDI
+LOCATE COMP "light_sw[2]"       SITE  "1" ;
+# TMS
+LOCATE COMP "light_sw[3]"       SITE  "70" ;
+# TCK
+LOCATE COMP "light_sw[4]"       SITE  "71" ;
+#
+#
+# Additional constraints
+# XO3D specific
+#
+#  <<<<<<<<<<<<<<<<<<< TRACEID >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# The MachXO2 introduces a new feature called TraceID. TraceID stamps each MachXO2 with a unique 64-bit ID. No two
+# MachXO2 devices has the same TraceID value even when they are loaded with the same configuration data. This differs
+# from a USERCODE which is present in the configuration data. Every device that receives the configuration data using a
+# USERCODE receives the same USERCODE value.
+# The TraceID is 64 bits long with the least significant 56 bits being immutable data. The 56 bits are a combination of the
+# wafer lot, the wafer number and the X/Y coordinates locating the die on the wafer. The most significant eight bits are
+# provided by you and are stored in the Feature Row. The TraceID is changed using the Diamond Spreadsheet View. You
+# enter a unique 8-bit binary value in the TraceID field and generate configuration data.
+TRACEID "00011111" ;
+#
+#  <<<<<<<<<<<<<<<<<<< USERCODE >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+USERCODE HEX "abcdef01" ;
+#
+#  <<<<<<<<<<<<<<<<<<< COMPRESS_CONFIG >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+SYSCONFIG COMPRESS_CONFIG=ON      ; # compression of the config on
+#
+#
+#
+#  <<<<<<<<<<<<<<<<<<< CONFIGURATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# CFG : The CFG preference is the default mode for building configuration data. The configuration bitstream is
+#       stored in the Configuration Flash and is not permitted to overflow into the UFM sector. The configuration data
+#       includes EBR initialization data. The UFM sector is available for your use as general purpose Flash memory in user
+#       mode.
+# CFG_EBRUFM : This preference creates configuration data that is stored in the Configuration Flash. EBR
+#       initialization data is stored in the lowest page addresses of the UFM sector. The UFM sector is available in user
+#       mode. You must restore the EBR initialization data when making changes to the UFM to guarantee correct operation.
+# CFGUFM : This preference creates configuration data that is stored in the Configuration Flash. This mode differs
+#       from CFG by allowing the configuration data to overflow into the UFM. The configuration data increases in size as
+#       EBR initialization data is added to the design.
+# EXTERNAL : This preference generates configuration data that is stored in an external memory. The UFM sector is
+#       available as general purpose Flash memory in user mode.
+SYSCONFIG CONFIGURATION=CFG       ; # we don't have any external configuration flash!
+#
+#
+#  <<<<<<<<<<<<<<<<<<< PRIMARY_BOOT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# IMAGE_0 : This preference is the default setting. It uses CFG0 or CFG0 plus UFM0 sectors for the primary boot.
+#           The CONFIGURATION preference determines whether or not UFM0 is used to store the configuration image.
+# IMAGE_1 : This preference uses CFG1 or CFG1 plus UFM1 sectors for the primary boot. The CONFIGURATION
+#           preference determines whether or not UFM1 is used to store the configuration image.
+# EXTERNAL: This preference uses the external memory for the primary boot.
+# LATEST  : This preference is one of the settings for the version-based Dual Boot Configuration Mode. The
+#           configuration starts from one of the CFG0 and CFG1 that has the later configuration image or the larger version
+#           number first. If the process fails, the former configuration image in the other internal Flash sector is loaded.
+# FORMER  : This preference is one of the settings for the version-based Dual Boot Configuration Mode. The
+#           configuration starts from one of the CFG0 and CFG1 that has the former configuration image or the smaller version
+#           number first. If the process fails, the later configuration image in the other internal Flash sector is loaded.
+# will be added by the Makefile
+SYSCONFIG PRIMARY_BOOT=IMAGE_0  ;
+#
+#
+#  <<<<<<<<<<<<<<<<<<< SECONDARY_BOOT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# NONE    : This preference is the default setting. It is used to select the single image configuration mode.
+# the other settings as for PRIMARY_BOOT!
+#
+SYSCONFIG SECONDARY_BOOT=NONE ;
+#
+# SYSCONFIG ROLLBACK_CONTROL=DISABLE ;
+#
+#  <<<<<<<<<<<<<<<<<<< MY_ASSP >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# Every Lattice device has its own identification code identifying the device family, device density, and other parameters
+# (such as voltage, device stepping, and others.). The code is accessible from any MachXO2 configuration port. The value
+# stored in the IDCODE register allows you to uniquely identify a Lattice device.
+# The MY_ASSP preference permits you to change the value returned when the IDCODE is read from the FPGA. Set the
+# MY_ASSP preference to the ON state. Turning the MY_ASSP ON enables the CUSTOM_IDCODE preference.
+SYSCONFIG MY_ASSP=OFF             ;
+# only when ON above you are allowed to set a 32-bit hex or bin code below !
+# CUSTOM_IDCODE=12345678
+#
+#  <<<<<<<<<<<<<<<<<<< CONFIG_SECURE >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# When this preference set to ON, the read-back of the SRAM memory and the Flash memory are blocked using any of
+# the sysCONFIG ports (JTAG, SPI, I2C, WISHBONE).
+#CONFIG_SECURE=OFF
+#
+# DO NOT CHANGE THIS FEATURE !!!
+# ONE_TIME_PROGRAM=OFF
+#
+#
+#  <<<<<<<<<<<<<<<<<<< BACKGROUND_RECONFIG >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# The BACKGROUND_RECONFIG preference specifies the behavior of the PROGRAMN pin and the sysCONFIG REFRESH
+# command. It has four possible settings:
+# OFF (default) : Toggling PROGRAMN or transmitting the REFRESH command initiates a standard 'warm-boot'
+#                 SRAM reconfiguration sequence from the specified internal or external configuration image or dual-boot images.
+#                 The 'warm-boot' sequence executes initialization, configuration, and wake-up steps before reentering user mode
+#                 (see the Configuration Process and Flow section).
+# SRAM_ONLY :     Toggling PROGRAMN or transmitting the REFRESH command initiates a 'background' SRAM
+#                 reconfiguration sequence from the specified internal or external configuration image or dual-boot images. The
+#                 'background' sequence executes the configuration step alone. The initialization and wake-up steps are bypassed
+#                 while the device remains in user mode throughout the sequence. This is typically used in conjunction with
+#                 soft-error-detection (SED) to support soft-error-correction (SEC). The device operates without disruption. Only
+#                 erroneous SRAM cells are corrected. With this setting, the SRAM cells except EBRs and all hardened blocks in
+#                 MachXO3D device are updated during the background reconfiguration.
+# SRAM_EBR :      The function is the same as that of the SRAM_ONLY except that EBRs are also updated during the
+#                 background reconfiguration.
+# ON       :      The function is the same as that of SRAM_EBR except that all hardened blocks in the MachXO3D device are
+#                 updated during the background reconfiguration.
+SYSCONFIG BACKGROUND_RECONFIG=OFF ;
+#
+#
+#  <<<<<<<<<<<<<<<<<<< MUX_CONFIGURATION_PORTS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ENABLE :  In this mode, the JTAG I/O are dedicated and provide an IEEE 1149.1 JTAG interface.
+#           So the pin JTAGEN can be used as normal user I/O
+# DISABLE : The JTAG port, when set in the DISABLE state, enables the JTAGENB input. JTAGENB permits the JTAG pins to be
+#           multiplexed. Asserting JTAGENB high causes the JTAG pins to take on the IEEE 1149.1 personality. Deasserting JTAGENB
+#           (that is driven low) causes the JTAG port pins to become general purpose I/O.
+SYSCONFIG JTAG_PORT=DISABLE        ; # JTAG enable!
+#
+# must enable the JTAG mux when disabled above and no other configuration port enabled!!!
+SYSCONFIG MUX_CONFIGURATION_PORTS=ENABLE ;
+#
+#
+#  <<<<<<<<<<<<<<<<<<< MASTER_SPI_PORT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ENABLE :  This setting preserves the SPI port I/O when the MachXO2 is in user mode. This preference makes
+#           External or Dual Boot configuration modes active. Using this preference in combination with
+#           CONFIGURATION = EXTERNAL
+#           enables external boot mode. This preference in combination with CFG, CFG_EBRUFM, CFGUFM enables
+#           Dual Boot mode. After entering user mode, the SPI controller in the EFB has access to the SPI port for performing
+#           SPI bus transactions. The preference also prevents you from over-assigning I/O to the port pins.
+# DISABLE : This setting disconnects the SPI port pins from the configuration logic. By itself it does not make the port
+#           pins general purpose I/O. Both the SLAVE_SPI_PORT and MASTER_SPI_PORT must be in the DISABLE state for the
+#           SPI port pins to be general purpose I/O.
+SYSCONFIG MASTER_SPI_PORT=DISABLE  ; # config using external SPI Flash memory
+#
+#
+#  <<<<<<<<<<<<<<<<<<< SLAVE_SPI_PORT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ENABLE :  This setting preserves the SPI port I/O when the MachXO2 device is in user mode. When the pins are
+#           preserved, an external SPI master controller can interact with the configuration logic. The preference also prevents
+#           you from over-assigning I/O to the port pins.
+# DISABLE : This setting disconnects the SPI port pins from the configuration logic. By itself it does not make the port
+#           pins general purpose I/O. Both the SLAVE_SPI_PORT and MASTER_SPI_PORT must be in the DISABLE state for the
+#           SPI port pins to be general purpose I/O.
+SYSCONFIG SLAVE_SPI_PORT=DISABLE  ;
+#
+#
+#  <<<<<<<<<<<<<<<<<<< I2C_PORT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# ENABLE :  This setting preserves the I2C port I/O when the MachXO2 is in user mode. When the pins are preserved
+#           and the EFB is instantiated with wb_clk_i input connected to a valid clock source of at least 7.5x the I2C bus rate, an
+#           external I2C Master controller can interact with the configuration logic. The preference also prevents you from
+#           over-assigning I/O to the port pins.
+# DISABLE : This setting disconnects the I2C port pins from the configuration logic. The port pins become general
+#           purpose I/O.
+SYSCONFIG I2C_PORT=DISABLE        ; # no config over I2C
+#
+#
+#  <<<<<<<<<<<<<<<<<<< SDM_PORT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# DISABLE : This setting causes the PROGRAMN, DONE, and INITN status pins to become general purpose I/O.
+#
+# PROGRAMN : This setting preserves the PROGRAMN pin when the MachXO2 device is in user mode. Asserting this
+#           pin active low causes the MachXO2 device to reconfigure. The DONE and INITN pins are general purpose I/O.
+#
+# DONE :    This setting preserves the DONE pin when the MachXO2 device is in user mode. The PROGRAMN and
+#           INITN pins are general purpose I/O.
+#
+# INITN :   This setting preserves the DONE pin when the MachXO2 device is in user mode. The PROGRAMN and
+#           DONE pins are general purpose I/O.
+#
+# PROGRAMN_DONE : This setting preserves the PROGRAMN and DONE pins when the MachXO2 device enters user
+#                 mode. INITN is a general purpose I/O.
+#
+# PROGRAMN_DONE_INITN : This setting preservers PROGRAM, DONE, and INITN in user mode.
+SYSCONFIG SDM_PORT=PROGRAMN_DONE_INITN        ;
+#
+# Note: still it is recommended to use PROGRAMn pin as FPGA output and to provide log 1 when booting the FPGA!
+#
+#
+#  <<<<<<<<<<<<<<<<<<< CUR_DESIGN_BOOT_LOCATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# The CUR_DESIGN_BOOT_LOCATION preference is used to specify the location of the configuration image generated by
+# the current Diamond project in Dual Boot applications. When set to IMAGE_0, it is targeted to the CFG0 space of the
+# internal Flash. When set to IMAGE_1, it is targeted to the CFG1 space of the internal Flash.
+# SYSCONFIG CUR_DESIGN_BOOT_LOCATION=IMAGE_0 ;
