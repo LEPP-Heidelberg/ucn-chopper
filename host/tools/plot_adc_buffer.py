@@ -91,7 +91,7 @@ def main():
              "of --pattern in --dir)",
     )
     ap.add_argument(
-        "--dir", default="/home/thepworth/chopper",
+        "--dir", default=".",
         help="directory to search when no file is given (default: %(default)s)",
     )
     ap.add_argument(

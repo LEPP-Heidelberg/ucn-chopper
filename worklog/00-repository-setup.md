@@ -122,6 +122,32 @@ Listed in `docs/CODE_MAP.md` §10. The ones that matter for the NOMAD port:
   loop, instead of per register).
 - `prepare_all_regs` has different parameter orders in the header and the source.
 
+## Path audit (same step)
+
+After the move, every kind of relative path was checked, not just the includes:
+
+| Kind | Result |
+|---|---|
+| `#include` in `host/` | 9 files now use `"../upstream/…"`, which resolves relative to the including file, so it works whatever directory `make` runs from |
+| `#include` between `upstream/` files | plain names (`"uart.h"`, `"CLogger.h"`, `"one_xo3d_fpga8_32.h"`), resolved inside `upstream/` — unchanged and still correct |
+| Script → script | all via `"$SCRIPT_DIR"` / `"$PROJ_DIR"`; `SCRIPT_DIR` is defined before its first use in all 11 scripts (checked) |
+| Script → waveform | all via `"$SCRIPT_DIR/waveforms/…"` |
+| File paths inside C++ | all come from command-line arguments, except `res_wave.dat`, which `C_hbr::resample_power_profile` writes into the **current working directory** (unchanged behaviour; git-ignored) |
+| `host/tools/plot_adc_buffer.py` | its `--dir` default was the absolute `/home/thepworth/chopper`; changed to `.` (still overridable with `--dir`) |
+| `host/Makefile` FPGA targets | `prog_w`, `prog_g`, `vrf_*`, `imem` refer to `./pgm/…`, which is not in the repository. A comment now says so above those targets |
+| `docs/` | two stale references to the old layout updated (`CODE_MAP.md` header and §4.1, plus the "version control first" step in `nomad.html`) |
+
+Two things worth knowing:
+
+- `upstream/uart32.h` selects its base class with `#ifdef`: `uart_win.h` for Windows and
+  `uart_zynq.h` for Zynq. Those two files were **not** copied, because this project builds
+  neither. A Windows build would need them from SVN. This is also where the NOMAD variant
+  will be added later (`uart_nomad.h` / `PosixLink`).
+- `overheat_check.sh` still defaults to `LOG_DIR=/home/thepworth/chopper` for the bench
+  multimeter CSVs. That is data written outside the repository, and it is overridable.
+
+Re-verified after these edits: `make hbr` still builds and `plot_adc_buffer.py` still parses.
+
 ## Next step
 
 `01-…`: the byte-recording test harness moved into the repository, so that later changes to

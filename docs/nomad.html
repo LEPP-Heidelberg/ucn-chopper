@@ -1133,7 +1133,7 @@ flowchart LR
   <!-- PHASE 0 -->
   <h3>Phase 0 · Baseline and safety net <span class="tag pure">no NOMAD</span></h3>
   <div class="card"><ol style="margin:0;padding-left:20px">
-    <li><b>Version control first.</b> <code>PROJECTS/N219_4x_H-Bridge/C</code> is not a git repository. Run <code>git init</code> and commit the current, working state, so every later refactor can be compared against it.</li>
+    <li><b>Version control.</b> <span class="tag pure">done 2026-09-23</span> The code now lives in <code>github.com/LEPP-Heidelberg/ucn-chopper</code> (<code>host/</code>, <code>upstream/</code>, <code>docs/</code>, <code>worklog/</code>). See <code>worklog/00-repository-setup.md</code>.</li>
     <li><b>Golden traces (offline).</b> Turn the byte-recording mock (§3.3) into a test tool that runs each <code>hbr</code> operation (<code>--set_pwm</code>, <code>--hbr_decay</code>, <code>--read_table … --load_table</code>, <code>--start</code>, <code>--adc_conf</code>, <code>--get_adc_buff</code>…) and saves the bytes to <code>tests/golden/*.txt</code>. These define "correct" for every later phase.</li>
     <li><b>Golden traces (hardware).</b> <code>uart</code> can already log every real byte: <code>setLogFlag()</code> + <code>setLogFile()</code> in <code>uart.h</code>. Capture <code>initialize_fpga.sh</code>, <code>open_shutter.sh</code>, and <code>close_shutter.sh</code> once, including the replies.</li>
     <li><b>Bench numbers</b> the design depends on:

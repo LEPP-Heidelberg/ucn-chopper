@@ -204,6 +204,10 @@ clean:
 #                          #
 ############################
 #
+# NOTE: the ./pgm/ directory (FPGA bitstreams, CPU imem) is NOT part of the
+# ucn-chopper repository - see worklog/00-repository-setup.md. The prog_*,
+# vrf_*, and imem targets below need those files copied in first.
+#
 # program new FPGA image
 prog_w:
 	./$(FPGA_PROGRAM) --br $(UART_BaudRate) --dev $(DEV) --id $(ID_MASK) --epv_cfg 0 $(PROG_FILE_W)

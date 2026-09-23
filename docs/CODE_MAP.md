@@ -1,8 +1,9 @@
 # N219 4x H-Bridge — host software code map
 
-Covers the host-side C++ in `PROJECTS/N219_4x_H-Bridge/C` and the upstream
-communication code it links from `Lattice_XO2_UART/C` (`uart`, `uart32`,
-`CLogger`, `one_xo3d_fpga8_32`). Written as the reference for porting the
+Covers the host-side C++ in `host/` and the upstream communication code it
+links from `upstream/` (`uart`, `uart32`, `CLogger`, `one_xo3d_fpga8_32`).
+Both came from the Heidelberg SVN tree `Lattice_XO2_UART` (see
+`worklog/00-repository-setup.md`). Written as the reference for porting the
 code to a NOMAD driver and controller.
 
 Line references are `file:line` in the tree as of 2026-09-22.
@@ -120,7 +121,7 @@ used anywhere in this project are:
 
 ## 4. Upstream communication layer
 
-### 4.1 `uart` (`../../../C/uart.h`, `uart.cpp`) — raw serial bytes
+### 4.1 `uart` (`upstream/uart.h`, `uart.cpp`) — raw serial bytes
 
 | Function | What it does |
 |---|---|
