@@ -1,0 +1,108 @@
+Why the H-bridge sequencer has separate rising/falling edge tables
+====================================================================
+
+Background
+----------
+Each H-bridge channel drives a coil-actuated shutter. The FPGA firmware
+(C_hbr.h / C_hbr.cpp) refers to this explicitly in its register comments:
+
+    // bits 0, 1 - go to ON  at shutter 1, 2
+    // bits 2, 3 - go to OFF at shutter 1, 2
+    ADDR_SEQ_AD_RANGE_ON_1/OFF_1, ADDR_SEQ_AD_RANGE_ON_2/OFF_2
+
+"ON" (rising edge) = the transition that actuates/opens the shutter.
+"OFF" (falling edge) = the transition that releases/closes it.
+
+Why two separate, independently-programmed profiles
+-----------------------------------------------------
+1. Opening and closing an inductive (coil) actuator are not mirror-image
+   events. Opening usually needs to overcome static friction / a return
+   spring / inertia quickly, so it benefits from a strong initial current
+   "kick" that then tapers down to a lower holding power once the shutter
+   has moved (this avoids overheating the coil during the hold phase).
+   Closing does not have the same requirement, and how quickly and how
+   hard it closes is its own thing to tune (repeatability, avoiding
+   mechanical shock/bounce on the stop).
+
+2. Turning the coil off is an active choice, not just "no current" -
+   this driver has an adjustable decay mode (--hbr_decay: slow / smart /
+   mixed) and an off-time parameter (--hbr_toff). A shaped, decreasing
+   PWM table on the falling edge lets you control exactly how the stored
+   magnetic energy is released (soft vs. fast decel) instead of relying
+   solely on the driver's fixed decay behavior. Note in the Makefile the
+   falling-edge table is loaded with a negative power_scale
+   (TABLE_FALLING=wave_corr_cat2.dat 0 0.1 -1) - the sign inversion
+   suggests the falling transition can actively drive the coil in the
+   opposite polarity (fast/active braking) rather than just letting it
+   passively decay, and the 0.1 time_scale compresses the whole
+   transition to run much faster than the rising-edge table's native
+   timing.
+
+3. Hardware-level reason: each channel only has one 1024-entry sequence
+   RAM block (SEQ_LENGTH). It is split in half - the first 512 entries
+   for the rising/ON table, the second 512 for the falling/OFF table
+   (C_hbr::hbr_upload_seq_table, C_hbr.cpp:939-961):
+
+       seq_nr  = 1-(re & 1);
+       seq_beg = SEQ_LENGTH*seq_nr/2;   // in the middle or at the beginning
+
+   The ADDR_SEQ_AD_RANGE_ON_x / ADDR_SEQ_AD_RANGE_OFF_x registers point
+   the playback state machine at one half or the other, and
+   ADDR_START_ON_OFF has separate trigger bits for "go ON" vs "go OFF"
+   per channel. So the sequencer is explicitly told which stored profile
+   to play - direction isn't inferred from position in one shared table.
+
+Net effect: you get independent control over the open transition and the
+close transition, which is what lets you tune each one for speed,
+softness, and repeatability without the other changing.
+
+
+Command order to load and run a table
+---------------------------------------
+Per channel/edge combination:
+
+  1. Build the table in hbr's memory from a PWL data file
+     (two columns per line: time_ms  power_percent, ascending time,
+     '#' for comments):
+
+       ./hbr --read_table <file.dat> <time_step_ms> <time_scale> <power_scale>
+
+       time_step_ms : 0 to resample at the current PWM period, or a
+                      fixed step in ms
+       time_scale   : multiplier on time, 1 = no change
+       power_scale  : multiplier on power, 1 = no change, negative to
+                      invert polarity (see falling-edge note above)
+
+  2. Immediately upload it to the FPGA, into a specific channel + edge
+     slot (must be chained onto the same command line as --read_table -
+     the table only lives in the process's memory in between):
+
+       ./hbr --load_table <ch=0|1> <rising_edge=0|1>
+
+     Combined example:
+
+       ./hbr --read_table my_table.dat 0 1 1 --load_table 0 1
+
+  3. Repeat for every channel/edge you need, e.g. matching the Makefile
+     targets pwl_table0r / pwl_table0f / pwl_table1r / pwl_table1f
+     (0/rising, 0/falling, 1/rising, 1/falling).
+
+  4. Before any of this can actually move the shutter, hbr_conf must
+     already be applied (SLEEP_n, sm_reset, decay/toff) - and re-applied
+     after every power-cycle or `make refresh`, since that config does
+     not persist across an FPGA reconfiguration:
+
+       make hbr_conf
+
+  5. Trigger playback (separate step from loading):
+
+       ./hbr --start <ch_mask=0..3> <seq1=0|1> <seq2=0|1>
+
+     ch_mask bit 0/1 selects H-bridge 1/2; seq1/seq2 choose which
+     transition to fire on that channel (1 = go ON/rising, 0 = go
+     OFF/falling).
+
+  6. Optional verification before/after starting:
+
+       ./hbr --hbr_rep            # reports table length/offset per channel
+       ./hbr --export_table out.mem   # dump the just-built table for inspection
